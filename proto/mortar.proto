@@ -1,0 +1,97 @@
+syntax = "proto3";
+option go_package = "mortarpb";
+package mortar;
+
+service Mortar {
+    // identify which sites meet the requirements of the queries
+    rpc Qualify(QualifyRequest) returns (QualifyResponse);
+    // pull data from Mortar
+    rpc Fetch(FetchRequest) returns (stream FetchResponse);
+}
+
+message QualifyRequest {
+    // all of these queries must return a response for the site to be considered
+    // qualified
+    repeated string requiredqueries = 1;
+
+    // only one of these needs to return a response for the site to be
+    // considered qualified
+    repeated string optionalqueries = 2;
+}
+
+message QualifyResponse {
+    string error = 1;
+    // list of sitenames
+    repeated string sites = 2;
+}
+
+message FetchRequest {
+    // the list of sites to execute against
+    repeated string sites = 1;
+    // list of streams to download
+    repeated Stream streams = 2;
+    // temporal parameters for all streams
+    // (range of data to download, resolution)
+    TimeParams time = 3;
+}
+
+message Stream {
+    // name of the stream
+    string name = 1;
+
+    // Brick query (alternative)
+    string definition = 2;
+    // list of stream UUIDs
+    repeated string uuids = 3;
+
+    // aggregation function for this stream
+    AggFunc aggregation = 4;
+    // engineering units to convert the stream to
+    string units = 5;
+}
+
+message FetchResponse {
+    // error from backend
+    string error = 1;
+    // stream definition fields:
+    // - site name
+    // - variable name (from Stream definition)
+    string site = 2;
+    string variable = 3;
+    string identifier = 4;
+    // timestamps and value should have same length
+    repeated int64 times = 5;
+    repeated double values = 6;
+    // brick query contents related to this variable
+    repeated Triple triples = 7;
+}
+
+message Triple {
+    URI subject = 1;
+    URI predicate = 2;
+    URI object = 3;
+}
+
+message URI {
+    // full URI
+    string namespace = 1;
+    string value = 2;
+}
+
+message TimeParams {
+    string start = 1;
+    string end = 2;
+    string window = 3;
+    bool aligned = 4;
+}
+
+enum AggFunc {
+    AGG_FUNC_INVALID = 0;
+    AGG_FUNC_RAW = 1;
+    AGG_FUNC_MEAN = 2;
+    AGG_FUNC_MIN = 3;
+    AGG_FUNC_MAX = 4;
+    AGG_FUNC_COUNT = 5;
+    AGG_FUNC_SUM = 6;
+}
+
