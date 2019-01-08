@@ -12,11 +12,11 @@ service Mortar {
 message QualifyRequest {
     // all of these queries must return a response for the site to be considered
     // qualified
-    repeated string requiredqueries = 1;
+    repeated string required = 1;
 
     // only one of these needs to return a response for the site to be
     // considered qualified
-    repeated string optionalqueries = 2;
+    repeated string optional = 2;
 }
 
 message QualifyResponse {
