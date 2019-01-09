@@ -143,6 +143,7 @@ func (stage *TimeseriesQueryStage) getStream(streamuuid uuid.UUID) (stream *btrd
 }
 
 func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
+	// parse timestamps for the query
 	start_time, err := time.Parse(time.RFC3339, ctx.request.Time.Start)
 	if err != nil {
 		err = errors.Wrapf(err, "Could not parse Start time (%s)", ctx.request.Time.Start)
@@ -155,44 +156,49 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 		ctx.addError(err)
 		return err
 	}
+
 	//ctx.request.TimeParams.window
 	qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
 	defer cancel()
 
 	// loop over all streams, and then over all UUIDs
-	for _, stream := range ctx.request.Streams {
-		for _, uuStr := range stream.Uuids {
+	for _, reqstream := range ctx.request.Streams {
+		for _, uuStr := range reqstream.Uuids {
 			uu := uuid.Parse(uuStr)
 			stream, err := stage.getStream(uu)
 			if err != nil {
 				ctx.addError(err)
 				return err
 			}
-			// if raw data...
-			rawpoints, generations, errchan := stream.RawValues(qctx, start_time.UnixNano(), end_time.UnixNano(), 0)
 
-			resp := &mortarpb.FetchResponse{}
-			var pcount = 0
-			for p := range rawpoints {
-				pcount += 1
-				resp.Times = append(resp.Times, p.Time)
-				resp.Values = append(resp.Values, p.Value)
-				if pcount == TS_BATCH_SIZE {
+			// handle RAW streams
+			if reqstream.Aggregation == mortarpb.AggFunc_AGG_FUNC_RAW {
+				// if raw data...
+				rawpoints, generations, errchan := stream.RawValues(qctx, start_time.UnixNano(), end_time.UnixNano(), 0)
+
+				resp := &mortarpb.FetchResponse{}
+				var pcount = 0
+				for p := range rawpoints {
+					pcount += 1
+					resp.Times = append(resp.Times, p.Time)
+					resp.Values = append(resp.Values, p.Value)
+					if pcount == TS_BATCH_SIZE {
+						ctx.response = resp
+						stage.output <- ctx
+						resp = &mortarpb.FetchResponse{}
+						pcount = 0
+					}
+				}
+				if len(resp.Times) > 0 {
 					ctx.response = resp
 					stage.output <- ctx
-					resp = &mortarpb.FetchResponse{}
-					pcount = 0
 				}
-			}
-			if len(resp.Times) > 0 {
-				ctx.response = resp
-				stage.output <- ctx
-			}
 
-			<-generations
-			if err := <-errchan; err != nil {
-				ctx.addError(err)
-				return err
+				<-generations
+				if err := <-errchan; err != nil {
+					ctx.addError(err)
+					return err
+				}
 			}
 		}
 	}
