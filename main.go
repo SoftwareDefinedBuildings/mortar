@@ -17,7 +17,7 @@ func main() {
 		Streams: []*mortarpb.Stream{
 			{
 				Name:        "test1",
-				Definition:  "",
+				Definition:  "SELECT ?vav FROM soda WHERE { ?vav rdf:type brick:VAV };",
 				Uuids:       []string{"5bd3a840-6ee6-5922-aeaf-2d7ec0bb4cff"},
 				Aggregation: mortarpb.AggFunc_AGG_FUNC_RAW,
 				Units:       "",
@@ -35,8 +35,18 @@ func main() {
 
 	loadgen_stage := NewSimpleLoadGenStage(ctx1)
 
-	ts_stage_cfg := &TimeseriesStageConfig{
+	md_stage_cfg := &BrickQueryStageConfig{
 		Upstream:     loadgen_stage,
+		StageContext: maincontext,
+	}
+
+	md_stage, err := NewBrickQueryStage(md_stage_cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ts_stage_cfg := &TimeseriesStageConfig{
+		Upstream:     md_stage,
 		StageContext: maincontext,
 		BTrDBAddress: "127.0.0.1:4410",
 	}
