@@ -1,19 +1,41 @@
 package main
 
+import (
+	"log"
+	"sync/atomic"
+	"time"
+)
+
 type SimpleLoadGenStage struct {
 	output chan Context
+	count  int64
 }
 
-func NewSimpleLoadGenStage() *SimpleLoadGenStage {
+func NewSimpleLoadGenStage(contexts ...Context) *SimpleLoadGenStage {
 	stage := &SimpleLoadGenStage{
 		output: make(chan Context),
 	}
 
+	if len(contexts) == 0 {
+		contexts = append(contexts, Context{})
+	}
+
 	go func() {
-		for {
-			ctx := Context{}
-			stage.output <- ctx
+		for i := 0; i < len(contexts); i++ {
+			stage.output <- contexts[i]
+			atomic.AddInt64(&stage.count, 1)
+			if i == len(contexts)-1 {
+				i = -1
+			}
 		}
+	}()
+	go func() {
+		ticker := time.NewTicker(10 * time.Second)
+		for range ticker.C {
+			value := atomic.SwapInt64(&stage.count, 0)
+			log.Printf("Delivered %d/sec", value/10)
+		}
+
 	}()
 	return stage
 }
