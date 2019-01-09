@@ -44,15 +44,17 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = stage.db.LoadFile("soda", "BrickFrame.ttl", "brickframe")
+
+	// TODO: these aren't loaded at the beginning when the config file loads?
+	_, err = stage.db.LoadFile("soda", "./ttl/BrickFrame.ttl", "brickframe")
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "load brickframe"))
 	}
-	_, err = stage.db.LoadFile("soda", "Brick.ttl", "brick")
+	_, err = stage.db.LoadFile("soda", "./ttl/Brick.ttl", "brick")
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "load brick"))
 	}
-	_, err = stage.db.LoadFile("soda", "berkeley.ttl", "berkeley")
+	_, err = stage.db.LoadFile("soda", "./ttl/berkeley.ttl", "berkeley")
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "load berkeley"))
 	}
