@@ -1,7 +1,6 @@
 .PHONY: proto
 
-run: build
-	rm -rf _hod_
+run: build clean
 	./mortar
 
 
