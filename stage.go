@@ -16,6 +16,7 @@ type Context struct {
 	ctx      context.Context
 	request  mortarpb.FetchRequest
 	response *mortarpb.FetchResponse
+	done     chan *mortarpb.FetchResponse
 	errors   []error
 	sync.Mutex
 }

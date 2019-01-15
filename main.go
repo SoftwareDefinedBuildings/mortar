@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	mortarpb "git.sr.ht/~gabe/mortar/proto"
+	//mortarpb "git.sr.ht/~gabe/mortar/proto"
 	"github.com/pkg/profile"
 	"time"
 )
@@ -20,35 +20,44 @@ func main() {
 	maincontext, cancel := context.WithCancel(context.Background())
 
 	// do query with uuid: 5bd3a840-6ee6-5922-aeaf-2d7ec0bb4cff(
-	makectx1 := func() Context {
-		req := mortarpb.FetchRequest{
-			Sites: []string{"test_me_site_name"},
-			Streams: []*mortarpb.Stream{
-				{
-					Name:        "test1",
-					Definition:  "SELECT ?vav FROM ciee WHERE { ?vav rdf:type brick:Zone_Temperature_Sensor};",
-					DataVars:    []string{"?vav"},
-					Uuids:       []string{"2bde3736-1d93-59f4-8cdd-080d154c31be"},
-					Aggregation: mortarpb.AggFunc_AGG_FUNC_RAW,
-					Units:       "",
-				},
-			},
-			Time: &mortarpb.TimeParams{
-				Start: "1970-01-01T00:00:00Z",
-				End:   "1970-01-10T00:00:00Z",
-			},
-		}
-		ctx1 := Context{
-			ctx:     context.Background(),
-			request: req,
-		}
-		return ctx1
+	//	makectx1 := func() Context {
+	//		req := mortarpb.FetchRequest{
+	//			Sites: []string{"test_me_site_name"},
+	//			Streams: []*mortarpb.Stream{
+	//				{
+	//					Name:        "test1",
+	//					Definition:  "SELECT ?vav FROM ciee WHERE { ?vav rdf:type brick:Zone_Temperature_Sensor};",
+	//					DataVars:    []string{"?vav"},
+	//					Uuids:       []string{"2bde3736-1d93-59f4-8cdd-080d154c31be"},
+	//					Aggregation: mortarpb.AggFunc_AGG_FUNC_RAW,
+	//					Units:       "",
+	//				},
+	//			},
+	//			Time: &mortarpb.TimeParams{
+	//				Start: "1970-01-01T00:00:00Z",
+	//				End:   "1970-01-10T00:00:00Z",
+	//			},
+	//		}
+	//		ctx1 := Context{
+	//			ctx:     context.Background(),
+	//			request: req,
+	//		}
+	//		return ctx1
+	//	}
+
+	//loadgen_stage := NewSimpleLoadGenStage(makectx1)
+
+	frontend_stage_cfg := &ApiFrontendBasicStageConfig{
+		StageContext: maincontext,
+		ListenAddr:   "localhost:8888",
+	}
+	frontend_stage, err := NewApiFrontendBasicStage(frontend_stage_cfg)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	loadgen_stage := NewSimpleLoadGenStage(makectx1)
-
 	md_stage_cfg := &BrickQueryStageConfig{
-		Upstream:     loadgen_stage,
+		Upstream:     frontend_stage,
 		StageContext: maincontext,
 	}
 
@@ -77,6 +86,7 @@ func main() {
 	c := ts_stage.GetQueue()
 	for out := range c {
 		//fmt.Printf("> %d\n", len(out.response.Times))
+		out.done <- out.response
 		_ = out
 	}
 
