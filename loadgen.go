@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -19,22 +20,26 @@ func NewSimpleLoadGenStage(contexts ...func() Context) *SimpleLoadGenStage {
 		contexts = append(contexts, func() Context { return Context{} })
 	}
 
+	var notifier sync.Once
+
 	go func() {
 		for i := 0; i < len(contexts); i++ {
 			stage.output <- contexts[i]()
+			notifier.Do(func() {
+				go func() {
+					ticker := time.NewTicker(10 * time.Second)
+					for range ticker.C {
+						value := atomic.SwapInt64(&stage.count, 0)
+						log.Debugf("Delivered %d/sec", value/10)
+					}
+
+				}()
+			})
 			atomic.AddInt64(&stage.count, 1)
 			if i == len(contexts)-1 {
 				i = -1
 			}
 		}
-	}()
-	go func() {
-		ticker := time.NewTicker(10 * time.Second)
-		for range ticker.C {
-			value := atomic.SwapInt64(&stage.count, 0)
-			log.Debugf("Delivered %d/sec", value/10)
-		}
-
 	}()
 	return stage
 }
