@@ -4,11 +4,22 @@ import (
 	"context"
 	"fmt"
 	"git.sr.ht/~gabe/hod/hod"
+	logpb "git.sr.ht/~gabe/hod/proto"
 	"github.com/pkg/errors"
-	"log"
+	logrus "github.com/sirupsen/logrus"
+	"os"
+	"strings"
 	"sync"
 	"time"
 )
+
+var log = logrus.New()
+
+func init() {
+	log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, ForceColors: true})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(logrus.DebugLevel)
+}
 
 type BrickQueryStage struct {
 	upstream Stage
@@ -36,6 +47,8 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 		ctx:      cfg.StageContext,
 	}
 
+	log.Info("Start loading Brick config")
+	start := time.Now()
 	hodcfg, err := hod.ReadConfig("hodconfig.yml")
 	if err != nil {
 		return nil, err
@@ -45,34 +58,17 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 		return nil, err
 	}
 
-	// TODO: these aren't loaded at the beginning when the config file loads?
-	_, err = stage.db.LoadFile("soda", "./ttl/BrickFrame.ttl", "brickframe")
-	if err != nil {
-		log.Fatal(errors.Wrap(err, "load brickframe"))
-	}
-	_, err = stage.db.LoadFile("soda", "./ttl/Brick.ttl", "brick")
-	if err != nil {
-		log.Fatal(errors.Wrap(err, "load brick"))
-	}
-	_, err = stage.db.LoadFile("soda", "./ttl/berkeley.ttl", "berkeley")
-	if err != nil {
-		log.Fatal(errors.Wrap(err, "load berkeley"))
-	}
 	stage.highwatermark = time.Now().UnixNano()
-	//q := "SELECT ?x ?y FROM soda WHERE { ?r rdf:type brick:Room . ?x ?y ?r };"
-	// TODO: https://todo.sr.ht/%7Egabe/hod/1
-
-	// preseed
-	q := "SELECT ?vav FROM soda WHERE { ?vav rdf:type brick:VAV };"
+	q := "SELECT ?vav FROM ciee WHERE { ?vav rdf:type brick:Zone_Temperature_Sensor };"
 	query, err := stage.db.ParseQuery(q, stage.highwatermark)
 	if err != nil {
 		return nil, err
 	}
 	// TODO: rewrite query to get points and units
-	_, err = stage.db.Select(stage.ctx, query)
-	if err != nil {
+	if _, err = stage.db.Select(stage.ctx, query); err != nil {
 		return nil, err
 	}
+	log.Infof("Done loading Brick. Took %s", time.Since(start))
 
 	num_workers := 10
 	// consume function
@@ -127,23 +123,51 @@ func (stage *BrickQueryStage) processQuery(ctx Context) error {
 	qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
 	defer cancel()
 
-	for _, reqstream := range ctx.request.Streams {
+	for idx, reqstream := range ctx.request.Streams {
 		query, err := stage.db.ParseQuery(reqstream.Definition, stage.highwatermark)
 		if err != nil {
 			ctx.addError(err)
 			return err
 		}
-		// TODO: rewrite query to get points and units
+		// this rewrites the incoming query so that it extracts the UUIDs (bf:uuid property) for each of the
+		// variables in the SELECT clause of the query. This removes the need for the user to know that the bf:uuid
+		// property is how to relate the points to the timeseries database. However, it also introduces the complexity
+		// of dealing with whether or not the variables *do* have associated timeseries or not.
+		startIdx := rewriteQuery(query)
 		res, err := stage.db.Select(qctx, query)
 		if err != nil {
 			ctx.addError(err)
 			return err
 		}
-		_ = res
-		// TODO: extract UUIDs from query results and push into context
+
+		// extract UUIDs from query results and push into context
+		stream := ctx.request.Streams[idx]
+		for _, row := range res.Rows {
+			for uuidx := startIdx; uuidx < len(query.Vars); uuidx++ {
+				stream.Uuids = append(stream.Uuids, row.Values[uuidx].Value)
+			}
+		}
+
 		stage.output <- ctx
-		//fmt.Printf("Err: %v, # vars %d, count %d, num rows %d\n", res.Error, len(res.Variables), int(res.Count), len(res.Rows))
 	}
 	// brick query
 	return nil
+}
+
+func rewriteQuery(query *logpb.SelectQuery) int {
+	var newtriples []*logpb.Triple
+	var newselect []string
+	uuidPred := logpb.URI{Namespace: "https://brickschema.org/schema/1.0.3/BrickFrame", Value: "uuid"}
+
+	for _, varname := range query.Vars {
+		basevarname := strings.TrimPrefix(varname, "?")
+		basevarname_uuid := "?" + basevarname + "_uuid"
+		newtriples = append(newtriples, &logpb.Triple{Subject: &logpb.URI{Value: varname}, Predicate: []*logpb.URI{&uuidPred}, Object: &logpb.URI{Value: basevarname_uuid}})
+		newselect = append(newselect, basevarname_uuid)
+	}
+
+	oldidx := len(query.Vars)
+	query.Where = append(query.Where, newtriples...)
+	query.Vars = append(query.Vars, newselect...)
+	return oldidx
 }

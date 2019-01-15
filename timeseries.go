@@ -7,7 +7,6 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/pkg/errors"
 	"gopkg.in/btrdb.v4"
-	"log"
 	"sync"
 	"time"
 )
@@ -114,8 +113,11 @@ func (stage *TimeseriesQueryStage) getStream(streamuuid uuid.UUID) (stream *btrd
 	stream = stage.conn.StreamFromUUID(streamuuid)
 	if exists, existsErr := stream.Exists(ctx); existsErr != nil {
 		if existsErr != nil {
-			err = errors.Wrap(existsErr, "Could not fetch stream")
-			return
+			e := btrdb.ToCodedError(existsErr)
+			if e.Code != 501 {
+				err = errors.Wrap(existsErr, "Could not fetch stream")
+				return
+			}
 		}
 	} else if exists {
 
@@ -138,7 +140,9 @@ func (stage *TimeseriesQueryStage) getStream(streamuuid uuid.UUID) (stream *btrd
 	}
 
 	// else where we return a nil stream and the errStreamNotExist
-	err = errStreamNotExist
+	if stream == nil {
+		err = errStreamNotExist
+	}
 	return
 }
 
