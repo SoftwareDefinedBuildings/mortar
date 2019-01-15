@@ -41,6 +41,7 @@ message Stream {
 
     // Brick query (alternative)
     string definition = 2;
+    repeated string dataVars = 6;
     // list of stream UUIDs
     repeated string uuids = 3;
 

@@ -133,14 +133,17 @@ func (stage *BrickQueryStage) processQuery(ctx Context) error {
 		// variables in the SELECT clause of the query. This removes the need for the user to know that the bf:uuid
 		// property is how to relate the points to the timeseries database. However, it also introduces the complexity
 		// of dealing with whether or not the variables *do* have associated timeseries or not.
-		startIdx := rewriteQuery(query)
+		startIdx := rewriteQuery(reqstream.DataVars, query)
 		res, err := stage.db.Select(qctx, query)
 		if err != nil {
 			ctx.addError(err)
 			return err
 		}
 
-		// extract UUIDs from query results and push into context
+		// collate the UUIDs from query results and push into context.
+		// Because the rewritten query puts all of the new variables corresponding to the possible UUIDs at the end,
+		// the rewriteQuery method has to return the index that we start with when iterating through the variables in
+		// each row to make sure we get the actual queries.
 		stream := ctx.request.Streams[idx]
 		for _, row := range res.Rows {
 			for uuidx := startIdx; uuidx < len(query.Vars); uuidx++ {
@@ -150,16 +153,15 @@ func (stage *BrickQueryStage) processQuery(ctx Context) error {
 
 		stage.output <- ctx
 	}
-	// brick query
 	return nil
 }
 
-func rewriteQuery(query *logpb.SelectQuery) int {
+func rewriteQuery(datavars []string, query *logpb.SelectQuery) int {
 	var newtriples []*logpb.Triple
 	var newselect []string
 	uuidPred := logpb.URI{Namespace: "https://brickschema.org/schema/1.0.3/BrickFrame", Value: "uuid"}
 
-	for _, varname := range query.Vars {
+	for _, varname := range datavars {
 		basevarname := strings.TrimPrefix(varname, "?")
 		basevarname_uuid := "?" + basevarname + "_uuid"
 		newtriples = append(newtriples, &logpb.Triple{Subject: &logpb.URI{Value: varname}, Predicate: []*logpb.URI{&uuidPred}, Object: &logpb.URI{Value: basevarname_uuid}})

@@ -20,6 +20,7 @@ func main() {
 				{
 					Name:        "test1",
 					Definition:  "SELECT ?vav FROM ciee WHERE { ?vav rdf:type brick:Zone_Temperature_Sensor};",
+					DataVars:    []string{"?vav"},
 					Uuids:       []string{"2bde3736-1d93-59f4-8cdd-080d154c31be"},
 					Aggregation: mortarpb.AggFunc_AGG_FUNC_RAW,
 					Units:       "",
