@@ -12,7 +12,7 @@ func main() {
 	if doCPUprofile {
 		defer profile.Start(profile.CPUProfile, profile.ProfilePath(".")).Stop()
 	}
-	doBlockprofile := true
+	doBlockprofile := false
 	if doBlockprofile {
 		defer profile.Start(profile.BlockProfile, profile.ProfilePath(".")).Stop()
 	}
