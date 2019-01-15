@@ -46,7 +46,7 @@ func NewTimeseriesQueryStage(cfg *TimeseriesStageConfig) (*TimeseriesQueryStage,
 	stage.conn = conn
 
 	// TODO: configure concurrent connections
-	num_workers := 10
+	num_workers := 20
 	// consume function
 	for i := 0; i < num_workers; i++ {
 		go func() {

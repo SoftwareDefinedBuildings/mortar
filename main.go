@@ -8,7 +8,14 @@ import (
 )
 
 func main() {
-	defer profile.Start(profile.CPUProfile, profile.ProfilePath(".")).Stop()
+	doCPUprofile := false
+	if doCPUprofile {
+		defer profile.Start(profile.CPUProfile, profile.ProfilePath(".")).Stop()
+	}
+	doBlockprofile := true
+	if doBlockprofile {
+		defer profile.Start(profile.BlockProfile, profile.ProfilePath(".")).Stop()
+	}
 
 	maincontext, cancel := context.WithCancel(context.Background())
 
