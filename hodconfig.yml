@@ -24,4 +24,4 @@ profile:
     httpPort: 8080
 
 output:
-    logLevel: error
+    logLevel: info

@@ -100,7 +100,6 @@ func main() {
 		}
 	}()
 
-	go authenticateWithGRPC()
 	select {}
 	cancel()
 }
