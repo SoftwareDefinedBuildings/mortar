@@ -76,14 +76,19 @@ message FetchResponse {
     repeated int64 times = 5;
     repeated double values = 6;
     // brick query contents related to this variable
-    repeated Triple triples = 7;
+    repeated string variables = 7;
+    repeated Row rows = 8;
 }
 
-message Triple {
-    URI subject = 1;
-    URI predicate = 2;
-    URI object = 3;
+message Row {
+    repeated URI values = 1;
 }
+
+//message Triple {
+//    URI subject = 1;
+//    URI predicate = 2;
+//    URI object = 3;
+//}
 
 message URI {
     // full URI
