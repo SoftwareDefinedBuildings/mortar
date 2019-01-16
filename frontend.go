@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/encoding"
 	_ "google.golang.org/grpc/encoding/gzip"
+	"google.golang.org/grpc/metadata"
 	"net"
 	"sync"
 )
@@ -16,9 +17,14 @@ func init() {
 	encoding.RegisterCompressor(encoding.GetCompressor("gzip"))
 }
 
+var (
+	unauthorizedErr = errors.New("Unauthorized")
+)
+
 type ApiFrontendBasicStage struct {
 	ctx    context.Context
 	output chan Context
+	auth   *CognitoAuth
 	sync.Mutex
 }
 
@@ -26,6 +32,7 @@ type ApiFrontendBasicStageConfig struct {
 	TLSHost      string
 	TLSCacheDir  string
 	ListenAddr   string
+	AuthConfig   CognitoAuthConfig
 	Upstream     Stage
 	StageContext context.Context
 }
@@ -35,6 +42,12 @@ func NewApiFrontendBasicStage(cfg *ApiFrontendBasicStageConfig) (*ApiFrontendBas
 		output: make(chan Context),
 		ctx:    cfg.StageContext,
 	}
+
+	auth, err := NewCognitoAuth(cfg.AuthConfig)
+	if err != nil {
+		return nil, err
+	}
+	stage.auth = auth
 
 	var server *grpc.Server
 
@@ -65,9 +78,7 @@ func NewApiFrontendBasicStage(cfg *ApiFrontendBasicStageConfig) (*ApiFrontendBas
 
 // get the stage we pull from
 func (stage *ApiFrontendBasicStage) GetUpstream() Stage {
-	stage.Lock()
-	defer stage.Unlock()
-	return stage
+	return nil
 }
 
 // set the stage we pull from
@@ -100,15 +111,44 @@ func (stage *ApiFrontendBasicStage) Qualify(context.Context, *mortarpb.QualifyRe
 // pull data from Mortar
 // gets called from frontend by GRPC server
 func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client mortarpb.Mortar_FetchServer) error {
+	headers, ok := metadata.FromIncomingContext(client.Context())
+	if !ok {
+		return unauthorizedErr
+	}
+	if _tokens, ok := headers["token"]; ok && len(_tokens) > 0 && len(_tokens[0]) > 0 {
+		token := _tokens[0]
+		if _, authErr := stage.auth.verifyToken(token); authErr != nil {
+			return authErr
+		}
+	} else {
+		return errors.New("no auth key")
+	}
+	//TODO: method validate jwt token
+	// tell people to do 'user/pass' fetch api token first in program.
+
 	ctx := context.Background()
 	responseChan := make(chan *mortarpb.FetchResponse)
 	queryCtx := Context{
 		ctx:     ctx,
 		request: *request,
+		done:    responseChan,
 	}
+	go func() {
+		for resp := range responseChan {
+			//log.Println(resp)
+			client.SendMsg(resp)
+		}
+		//TODO: need to close the server connection when we are done.
+		//client.CloseSend()
+	}()
 	stage.output <- queryCtx
-	for resp := range responseChan {
-		log.Println(resp)
-	}
 	return nil
+}
+
+func (stage *ApiFrontendBasicStage) GetAPIKey(ctx context.Context, request *mortarpb.GetAPIKeyRequest) (*mortarpb.APIKeyResponse, error) {
+	access, refresh, err := stage.auth.verifyUserPass(request.User, request.Pass)
+	return &mortarpb.APIKeyResponse{
+		Token:        access,
+		Refreshtoken: refresh,
+	}, err
 }

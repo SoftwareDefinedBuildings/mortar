@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	//mortarpb "git.sr.ht/~gabe/mortar/proto"
 	"github.com/pkg/profile"
-	"time"
 )
 
 func main() {
@@ -46,10 +44,17 @@ func main() {
 	//	}
 
 	//loadgen_stage := NewSimpleLoadGenStage(makectx1)
+	//testcognito()
+	cfg, err := ReadConfig("mortarconfig.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Info(cfg)
 
 	frontend_stage_cfg := &ApiFrontendBasicStageConfig{
 		StageContext: maincontext,
-		ListenAddr:   "localhost:8888",
+		ListenAddr:   cfg.ListenAddr,
+		AuthConfig:   cfg.Cognito,
 	}
 	frontend_stage, err := NewApiFrontendBasicStage(frontend_stage_cfg)
 	if err != nil {
@@ -69,12 +74,14 @@ func main() {
 	ts_stage_cfg := &TimeseriesStageConfig{
 		Upstream:     md_stage,
 		StageContext: maincontext,
-		BTrDBAddress: "127.0.0.1:4410",
+		BTrDBAddress: cfg.BTrDBAddr,
 	}
 	ts_stage, err := NewTimeseriesQueryStage(ts_stage_cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	_ = ts_stage
 
 	var end Stage = ts_stage
 	for end != nil {
@@ -82,14 +89,18 @@ func main() {
 		end = end.GetUpstream()
 	}
 
-	log.Println("get output")
-	c := ts_stage.GetQueue()
-	for out := range c {
-		//fmt.Printf("> %d\n", len(out.response.Times))
-		out.done <- out.response
-		_ = out
-	}
+	go func() {
+		log.Println("get output")
+		c := ts_stage.GetQueue()
+		for out := range c {
+			out.done <- out.response
+			if out.is_finished() {
+				close(out.done)
+			}
+		}
+	}()
 
-	time.Sleep(30 * time.Second)
+	go authenticateWithGRPC()
+	select {}
 	cancel()
 }

@@ -18,6 +18,7 @@ type Context struct {
 	response *mortarpb.FetchResponse
 	done     chan *mortarpb.FetchResponse
 	errors   []error
+	finished bool
 	sync.Mutex
 }
 
@@ -25,6 +26,18 @@ func (ctx *Context) addError(err error) {
 	ctx.Lock()
 	defer ctx.Unlock()
 	ctx.errors = append(ctx.errors, err)
+}
+
+func (ctx *Context) finish() {
+	ctx.Lock()
+	defer ctx.Unlock()
+	ctx.finished = true
+}
+
+func (ctx *Context) is_finished() bool {
+	ctx.Lock()
+	defer ctx.Unlock()
+	return ctx.finished
 }
 
 type Stage interface {

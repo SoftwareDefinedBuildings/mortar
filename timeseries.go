@@ -147,6 +147,7 @@ func (stage *TimeseriesQueryStage) getStream(streamuuid uuid.UUID) (stream *btrd
 }
 
 func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
+	defer ctx.finish()
 	// parse timestamps for the query
 	start_time, err := time.Parse(time.RFC3339, ctx.request.Time.Start)
 	if err != nil {
