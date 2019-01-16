@@ -25,8 +25,8 @@ require (
 	golang.org/x/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
 	golang.org/x/net v0.0.0-20190110200230-915654e7eabc
 	golang.org/x/oauth2 v0.0.0-20190115181402-5dab4167f31c // indirect
-	golang.org/x/sys v0.0.0-20190115152922-a457fd036447 // indirect
-	golang.org/x/tools v0.0.0-20190116002428-2e4132e53b93 // indirect
+	golang.org/x/sys v0.0.0-20190116161447-11f53e031339 // indirect
+	golang.org/x/tools v0.0.0-20190116172244-f94e9803bfe7 // indirect
 	google.golang.org/genproto v0.0.0-20190111180523-db91494dd46c // indirect
 	google.golang.org/grpc v1.18.0
 	gopkg.in/BTrDB/btrdb.v4 v4.15.3 // indirect
