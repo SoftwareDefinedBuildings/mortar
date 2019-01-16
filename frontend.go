@@ -123,26 +123,32 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	} else {
 		return errors.New("no auth key")
 	}
-	//TODO: method validate jwt token
-	// tell people to do 'user/pass' fetch api token first in program.
 
-	ctx := context.Background()
+	// here we are authenticated to the service.
+	validateErr := validateFetchRequest(request)
+	if validateErr != nil {
+		return validateErr
+	}
+
 	responseChan := make(chan *mortarpb.FetchResponse)
 	queryCtx := Context{
-		ctx:     ctx,
+		ctx:     client.Context(),
 		request: *request,
 		done:    responseChan,
 	}
+	ret := make(chan error)
 	go func() {
+		var err error
 		for resp := range responseChan {
-			//log.Println(resp)
-			client.SendMsg(resp)
+			if err = client.Send(resp); err != nil {
+				break
+			}
 		}
-		//TODO: need to close the server connection when we are done.
-		//client.CloseSend()
+		ret <- err
 	}()
 	stage.output <- queryCtx
-	return nil
+	e := <-ret
+	return e
 }
 
 func (stage *ApiFrontendBasicStage) GetAPIKey(ctx context.Context, request *mortarpb.GetAPIKeyRequest) (*mortarpb.APIKeyResponse, error) {

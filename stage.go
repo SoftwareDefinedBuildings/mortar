@@ -32,6 +32,7 @@ func (ctx *Context) finish() {
 	ctx.Lock()
 	defer ctx.Unlock()
 	ctx.finished = true
+	ctx.done <- nil
 }
 
 func (ctx *Context) is_finished() bool {

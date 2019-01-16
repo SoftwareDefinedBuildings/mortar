@@ -120,9 +120,6 @@ func (stage *BrickQueryStage) String() string {
 }
 
 func (stage *BrickQueryStage) processQuery(ctx Context) error {
-	qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
-	defer cancel()
-
 	for idx, reqstream := range ctx.request.Streams {
 		query, err := stage.db.ParseQuery(reqstream.Definition, stage.highwatermark)
 		if err != nil {
@@ -134,7 +131,7 @@ func (stage *BrickQueryStage) processQuery(ctx Context) error {
 		// property is how to relate the points to the timeseries database. However, it also introduces the complexity
 		// of dealing with whether or not the variables *do* have associated timeseries or not.
 		startIdx := rewriteQuery(reqstream.DataVars, query)
-		res, err := stage.db.Select(qctx, query)
+		res, err := stage.db.Select(ctx.ctx, query)
 		if err != nil {
 			ctx.addError(err)
 			return err

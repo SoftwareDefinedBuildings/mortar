@@ -57,6 +57,9 @@ func NewTimeseriesQueryStage(cfg *TimeseriesStageConfig) (*TimeseriesQueryStage,
 					if err := stage.processQuery(ctx); err != nil {
 						log.Println(err)
 					}
+					ctx.response = nil
+					stage.output <- ctx
+					//ctx.done <- nil
 					// TODO: process query context
 				case <-stage.ctx.Done():
 					// case that breaks the stage and releases resources
@@ -96,7 +99,7 @@ func (stage *TimeseriesQueryStage) String() string {
 	return "<|ts stage|>"
 }
 
-func (stage *TimeseriesQueryStage) getStream(streamuuid uuid.UUID) (stream *btrdb.Stream, err error) {
+func (stage *TimeseriesQueryStage) getStream(ctx context.Context, streamuuid uuid.UUID) (stream *btrdb.Stream, err error) {
 	_stream, found := stage.streamCache.Load(streamuuid.Array())
 	if found {
 		//var ok bool
@@ -108,14 +111,14 @@ func (stage *TimeseriesQueryStage) getStream(streamuuid uuid.UUID) (stream *btrd
 		//}
 		return
 	}
-	ctx, cancel := context.WithTimeout(stage.ctx, MAX_TIMEOUT)
-	defer cancel()
 	stream = stage.conn.StreamFromUUID(streamuuid)
 	if exists, existsErr := stream.Exists(ctx); existsErr != nil {
 		if existsErr != nil {
 			e := btrdb.ToCodedError(existsErr)
 			if e.Code != 501 {
 				err = errors.Wrap(existsErr, "Could not fetch stream")
+				log.Fatal("c")
+				//defer cancel()
 				return
 			}
 		}
@@ -142,12 +145,13 @@ func (stage *TimeseriesQueryStage) getStream(streamuuid uuid.UUID) (stream *btrd
 	// else where we return a nil stream and the errStreamNotExist
 	if stream == nil {
 		err = errStreamNotExist
+		//defer cancel()
 	}
 	return
 }
 
 func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
-	defer ctx.finish()
+	//	defer ctx.finish()
 	// parse timestamps for the query
 	start_time, err := time.Parse(time.RFC3339, ctx.request.Time.Start)
 	if err != nil {
@@ -163,14 +167,13 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 	}
 
 	//ctx.request.TimeParams.window
-	qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
-	defer cancel()
+	//qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
 
 	// loop over all streams, and then over all UUIDs
 	for _, reqstream := range ctx.request.Streams {
 		for _, uuStr := range reqstream.Uuids {
 			uu := uuid.Parse(uuStr)
-			stream, err := stage.getStream(uu)
+			stream, err := stage.getStream(ctx.ctx, uu)
 			if err != nil {
 				ctx.addError(err)
 				return err
@@ -179,8 +182,7 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 			// handle RAW streams
 			if reqstream.Aggregation == mortarpb.AggFunc_AGG_FUNC_RAW {
 				// if raw data...
-				rawpoints, generations, errchan := stream.RawValues(qctx, start_time.UnixNano(), end_time.UnixNano(), 0)
-
+				rawpoints, generations, errchan := stream.RawValues(ctx.ctx, start_time.UnixNano(), end_time.UnixNano(), 0)
 				resp := &mortarpb.FetchResponse{}
 				var pcount = 0
 				for p := range rawpoints {

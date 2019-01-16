@@ -93,9 +93,10 @@ func main() {
 		log.Println("get output")
 		c := ts_stage.GetQueue()
 		for out := range c {
-			out.done <- out.response
-			if out.is_finished() {
+			if out.response == nil {
 				close(out.done)
+			} else {
+				out.done <- out.response
 			}
 		}
 	}()
