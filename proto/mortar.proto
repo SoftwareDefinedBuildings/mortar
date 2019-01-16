@@ -3,10 +3,22 @@ option go_package = "mortarpb";
 package mortar;
 
 service Mortar {
+    rpc GetAPIKey(GetAPIKeyRequest) returns (APIKeyResponse);
     // identify which sites meet the requirements of the queries
     rpc Qualify(QualifyRequest) returns (QualifyResponse);
     // pull data from Mortar
     rpc Fetch(FetchRequest) returns (stream FetchResponse);
+}
+
+message GetAPIKeyRequest {
+    string user = 1;
+    string pass = 2;
+    string refreshtoken = 3;
+}
+
+message APIKeyResponse {
+    string token = 1;
+    string refreshtoken = 2;
 }
 
 message QualifyRequest {
