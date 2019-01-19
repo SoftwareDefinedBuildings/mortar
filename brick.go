@@ -81,8 +81,9 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 				case ctx := <-input:
 					if err := stage.processQuery(ctx); err != nil {
 						log.Println(err)
+						ctx.response = nil
+						stage.output <- ctx
 					}
-					// TODO: process query context
 				case <-stage.ctx.Done():
 					// case that breaks the stage and releases resources
 					fmt.Println("Ending Brick Queue")
@@ -136,8 +137,10 @@ func (stage *BrickQueryStage) processQuery(ctx Context) error {
 		res, err := stage.db.Select(ctx.ctx, query)
 		if err != nil {
 			ctx.addError(err)
-			return err
+			//return err
 		}
+
+		// TODO: if we have no results from anywhere, need to notify the user and terminate early
 
 		// collate the UUIDs from query results and push into context.
 		// Because the rewritten query puts all of the new variables corresponding to the possible UUIDs at the end,
