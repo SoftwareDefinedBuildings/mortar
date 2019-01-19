@@ -1,7 +1,7 @@
 module git.sr.ht/~gabe/mortar
 
 require (
-	git.sr.ht/~gabe/hod v0.0.0-20190115053549-bf34de9438d3
+	git.sr.ht/~gabe/hod v0.0.0-20190119043319-107b669e0912
 	github.com/aws/aws-sdk-go v1.16.19
 	github.com/coreos/etcd v3.3.11+incompatible // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -26,7 +26,7 @@ require (
 	golang.org/x/net v0.0.0-20190110200230-915654e7eabc
 	golang.org/x/oauth2 v0.0.0-20190115181402-5dab4167f31c // indirect
 	golang.org/x/sys v0.0.0-20190116161447-11f53e031339 // indirect
-	golang.org/x/tools v0.0.0-20190116172244-f94e9803bfe7 // indirect
+	golang.org/x/tools v0.0.0-20190118193359-16909d206f00 // indirect
 	google.golang.org/genproto v0.0.0-20190111180523-db91494dd46c // indirect
 	google.golang.org/grpc v1.18.0
 	gopkg.in/BTrDB/btrdb.v4 v4.15.3 // indirect
