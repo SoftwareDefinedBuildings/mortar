@@ -9,7 +9,7 @@ import (
 )
 
 var MAX_TIMEOUT = time.Second * 300
-var TS_BATCH_SIZE = 10
+var TS_BATCH_SIZE = 100
 var errStreamNotExist = errors.New("Stream does not exist")
 
 type Context struct {
