@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='mortar',
   syntax='proto3',
   serialized_options=_b('Z\010mortarpb'),
-  serialized_pb=_b('\n\x0cmortar.proto\x12\x06mortar\"D\n\x10GetAPIKeyRequest\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\x0c\n\x04pass\x18\x02 \x01(\t\x12\x14\n\x0crefreshtoken\x18\x03 \x01(\t\"5\n\x0e\x41PIKeyResponse\x12\r\n\x05token\x18\x01 \x01(\t\x12\x14\n\x0crefreshtoken\x18\x02 \x01(\t\"4\n\x0eQualifyRequest\x12\x10\n\x08required\x18\x01 \x03(\t\x12\x10\n\x08optional\x18\x02 \x03(\t\"/\n\x0fQualifyResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\r\n\x05sites\x18\x02 \x03(\t\"`\n\x0c\x46\x65tchRequest\x12\r\n\x05sites\x18\x01 \x03(\t\x12\x1f\n\x07streams\x18\x02 \x03(\x0b\x32\x0e.mortar.Stream\x12 \n\x04time\x18\x03 \x01(\x0b\x32\x12.mortar.TimeParams\"\x80\x01\n\x06Stream\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x12\n\ndefinition\x18\x02 \x01(\t\x12\x10\n\x08\x64\x61taVars\x18\x06 \x03(\t\x12\r\n\x05uuids\x18\x03 \x03(\t\x12$\n\x0b\x61ggregation\x18\x04 \x01(\x0e\x32\x0f.mortar.AggFunc\x12\r\n\x05units\x18\x05 \x01(\t\"\x9f\x01\n\rFetchResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0c\n\x04site\x18\x02 \x01(\t\x12\x10\n\x08variable\x18\x03 \x01(\t\x12\x12\n\nidentifier\x18\x04 \x01(\t\x12\r\n\x05times\x18\x05 \x03(\x03\x12\x0e\n\x06values\x18\x06 \x03(\x01\x12\x11\n\tvariables\x18\x07 \x03(\t\x12\x19\n\x04rows\x18\x08 \x03(\x0b\x32\x0b.mortar.Row\"\"\n\x03Row\x12\x1b\n\x06values\x18\x01 \x03(\x0b\x32\x0b.mortar.URI\"\'\n\x03URI\x12\x11\n\tnamespace\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"I\n\nTimeParams\x12\r\n\x05start\x18\x01 \x01(\t\x12\x0b\n\x03\x65nd\x18\x02 \x01(\t\x12\x0e\n\x06window\x18\x03 \x01(\t\x12\x0f\n\x07\x61ligned\x18\x04 \x01(\x08*\x8e\x01\n\x07\x41ggFunc\x12\x14\n\x10\x41GG_FUNC_INVALID\x10\x00\x12\x10\n\x0c\x41GG_FUNC_RAW\x10\x01\x12\x11\n\rAGG_FUNC_MEAN\x10\x02\x12\x10\n\x0c\x41GG_FUNC_MIN\x10\x03\x12\x10\n\x0c\x41GG_FUNC_MAX\x10\x04\x12\x12\n\x0e\x41GG_FUNC_COUNT\x10\x05\x12\x10\n\x0c\x41GG_FUNC_SUM\x10\x06\x32\xbb\x01\n\x06Mortar\x12=\n\tGetAPIKey\x12\x18.mortar.GetAPIKeyRequest\x1a\x16.mortar.APIKeyResponse\x12:\n\x07Qualify\x12\x16.mortar.QualifyRequest\x1a\x17.mortar.QualifyResponse\x12\x36\n\x05\x46\x65tch\x12\x14.mortar.FetchRequest\x1a\x15.mortar.FetchResponse0\x01\x42\nZ\x08mortarpbb\x06proto3')
+  serialized_pb=_b('\n\x0cmortar.proto\x12\x06mortar\"L\n\x10GetAPIKeyRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x14\n\x0crefreshtoken\x18\x03 \x01(\t\"5\n\x0e\x41PIKeyResponse\x12\r\n\x05token\x18\x01 \x01(\t\x12\x14\n\x0crefreshtoken\x18\x02 \x01(\t\"4\n\x0eQualifyRequest\x12\x10\n\x08required\x18\x01 \x03(\t\x12\x10\n\x08optional\x18\x02 \x03(\t\"/\n\x0fQualifyResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\r\n\x05sites\x18\x02 \x03(\t\"`\n\x0c\x46\x65tchRequest\x12\r\n\x05sites\x18\x01 \x03(\t\x12\x1f\n\x07streams\x18\x02 \x03(\x0b\x32\x0e.mortar.Stream\x12 \n\x04time\x18\x03 \x01(\x0b\x32\x12.mortar.TimeParams\"\x80\x01\n\x06Stream\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x12\n\ndefinition\x18\x02 \x01(\t\x12\x10\n\x08\x64\x61taVars\x18\x06 \x03(\t\x12\r\n\x05uuids\x18\x03 \x03(\t\x12$\n\x0b\x61ggregation\x18\x04 \x01(\x0e\x32\x0f.mortar.AggFunc\x12\r\n\x05units\x18\x05 \x01(\t\"\x9f\x01\n\rFetchResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0c\n\x04site\x18\x02 \x01(\t\x12\x10\n\x08variable\x18\x03 \x01(\t\x12\x12\n\nidentifier\x18\x04 \x01(\t\x12\r\n\x05times\x18\x05 \x03(\x03\x12\x0e\n\x06values\x18\x06 \x03(\x01\x12\x11\n\tvariables\x18\x07 \x03(\t\x12\x19\n\x04rows\x18\x08 \x03(\x0b\x32\x0b.mortar.Row\"\"\n\x03Row\x12\x1b\n\x06values\x18\x01 \x03(\x0b\x32\x0b.mortar.URI\"\'\n\x03URI\x12\x11\n\tnamespace\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"I\n\nTimeParams\x12\r\n\x05start\x18\x01 \x01(\t\x12\x0b\n\x03\x65nd\x18\x02 \x01(\t\x12\x0e\n\x06window\x18\x03 \x01(\t\x12\x0f\n\x07\x61ligned\x18\x04 \x01(\x08*\x8e\x01\n\x07\x41ggFunc\x12\x14\n\x10\x41GG_FUNC_INVALID\x10\x00\x12\x10\n\x0c\x41GG_FUNC_RAW\x10\x01\x12\x11\n\rAGG_FUNC_MEAN\x10\x02\x12\x10\n\x0c\x41GG_FUNC_MIN\x10\x03\x12\x10\n\x0c\x41GG_FUNC_MAX\x10\x04\x12\x12\n\x0e\x41GG_FUNC_COUNT\x10\x05\x12\x10\n\x0c\x41GG_FUNC_SUM\x10\x06\x32\xbb\x01\n\x06Mortar\x12=\n\tGetAPIKey\x12\x18.mortar.GetAPIKeyRequest\x1a\x16.mortar.APIKeyResponse\x12:\n\x07Qualify\x12\x16.mortar.QualifyRequest\x1a\x17.mortar.QualifyResponse\x12\x36\n\x05\x46\x65tch\x12\x14.mortar.FetchRequest\x1a\x15.mortar.FetchResponse0\x01\x42\nZ\x08mortarpbb\x06proto3')
 )
 
 _AGGFUNC = _descriptor.EnumDescriptor(
@@ -60,8 +60,8 @@ _AGGFUNC = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=796,
-  serialized_end=938,
+  serialized_start=804,
+  serialized_end=946,
 )
 _sym_db.RegisterEnumDescriptor(_AGGFUNC)
 
@@ -84,14 +84,14 @@ _GETAPIKEYREQUEST = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='user', full_name='mortar.GetAPIKeyRequest.user', index=0,
+      name='username', full_name='mortar.GetAPIKeyRequest.username', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='pass', full_name='mortar.GetAPIKeyRequest.pass', index=1,
+      name='password', full_name='mortar.GetAPIKeyRequest.password', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -117,7 +117,7 @@ _GETAPIKEYREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=24,
-  serialized_end=92,
+  serialized_end=100,
 )
 
 
@@ -154,8 +154,8 @@ _APIKEYRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=94,
-  serialized_end=147,
+  serialized_start=102,
+  serialized_end=155,
 )
 
 
@@ -192,8 +192,8 @@ _QUALIFYREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=149,
-  serialized_end=201,
+  serialized_start=157,
+  serialized_end=209,
 )
 
 
@@ -230,8 +230,8 @@ _QUALIFYRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=203,
-  serialized_end=250,
+  serialized_start=211,
+  serialized_end=258,
 )
 
 
@@ -275,8 +275,8 @@ _FETCHREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=252,
-  serialized_end=348,
+  serialized_start=260,
+  serialized_end=356,
 )
 
 
@@ -341,8 +341,8 @@ _STREAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=351,
-  serialized_end=479,
+  serialized_start=359,
+  serialized_end=487,
 )
 
 
@@ -421,8 +421,8 @@ _FETCHRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=482,
-  serialized_end=641,
+  serialized_start=490,
+  serialized_end=649,
 )
 
 
@@ -452,8 +452,8 @@ _ROW = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=643,
-  serialized_end=677,
+  serialized_start=651,
+  serialized_end=685,
 )
 
 
@@ -490,8 +490,8 @@ _URI = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=679,
-  serialized_end=718,
+  serialized_start=687,
+  serialized_end=726,
 )
 
 
@@ -542,8 +542,8 @@ _TIMEPARAMS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=720,
-  serialized_end=793,
+  serialized_start=728,
+  serialized_end=801,
 )
 
 _FETCHREQUEST.fields_by_name['streams'].message_type = _STREAM
@@ -643,8 +643,8 @@ _MORTAR = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=941,
-  serialized_end=1128,
+  serialized_start=949,
+  serialized_end=1136,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetAPIKey',

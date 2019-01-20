@@ -46,5 +46,8 @@ generate:
       flags: plugins=grpc
       output: proto
     - name: python
-      flags: plugins=grpc
+      flags: plugins=grpc_python
+      output: proto
+    - name: grpc_python
+      path: ../grpc/bins/opt/grpc_python_plugin
       output: proto
