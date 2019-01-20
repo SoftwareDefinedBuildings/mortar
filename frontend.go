@@ -152,7 +152,7 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 }
 
 func (stage *ApiFrontendBasicStage) GetAPIKey(ctx context.Context, request *mortarpb.GetAPIKeyRequest) (*mortarpb.APIKeyResponse, error) {
-	access, refresh, err := stage.auth.verifyUserPass(request.User, request.Pass)
+	access, refresh, err := stage.auth.verifyUserPass(request.Username, request.Password)
 	return &mortarpb.APIKeyResponse{
 		Token:        access,
 		Refreshtoken: refresh,
