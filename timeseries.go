@@ -7,6 +7,9 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/pkg/errors"
 	"gopkg.in/btrdb.v4"
+	"math"
+	"regexp"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -169,6 +172,9 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 	//ctx.request.TimeParams.window
 	//qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
 
+	//TODO: when we try to download multiple streams, a "nil" gets sent too
+	// early and causes the "done" channel to be closed
+
 	// loop over all streams, and then over all UUIDs
 	for _, reqstream := range ctx.request.Streams {
 		for _, uuStr := range reqstream.Uuids {
@@ -190,6 +196,8 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 					resp.Times = append(resp.Times, p.Time)
 					resp.Values = append(resp.Values, p.Value)
 					if pcount == TS_BATCH_SIZE {
+						resp.Variable = reqstream.Name
+						resp.Identifier = uuStr
 						ctx.response = resp
 						stage.output <- ctx
 						resp = &mortarpb.FetchResponse{}
@@ -197,6 +205,8 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 					}
 				}
 				if len(resp.Times) > 0 {
+					resp.Variable = reqstream.Name
+					resp.Identifier = uuStr
 					ctx.response = resp
 					stage.output <- ctx
 				}
@@ -206,9 +216,103 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 					ctx.addError(err)
 					return err
 				}
+			} else {
+				windowSize, err := ParseDuration(ctx.request.Time.Window)
+				if err != nil {
+					ctx.addError(err)
+					return err
+				}
+				windowDepth := math.Log2(float64(windowSize))
+				suggestedAccuracy := uint8(math.Max(windowDepth-5, 30))
+
+				statpoints, generations, errchan := stream.Windows(ctx.ctx, start_time.UnixNano(), end_time.UnixNano(), uint64(windowSize.Nanoseconds()), suggestedAccuracy, 0)
+
+				resp := &mortarpb.FetchResponse{}
+				var pcount = 0
+				for p := range statpoints {
+					pcount += 1
+					resp.Times = append(resp.Times, p.Time)
+
+					resp.Values = append(resp.Values, valueFromAggFunc(p, reqstream.Aggregation))
+
+					if pcount == TS_BATCH_SIZE {
+						resp.Variable = reqstream.Name
+						resp.Identifier = uuStr
+						ctx.response = resp
+						stage.output <- ctx
+						resp = &mortarpb.FetchResponse{}
+						pcount = 0
+					}
+				}
+				if len(resp.Times) > 0 {
+					resp.Variable = reqstream.Name
+					resp.Identifier = uuStr
+					ctx.response = resp
+					stage.output <- ctx
+				}
+
+				<-generations
+				if err := <-errchan; err != nil {
+					ctx.addError(err)
+					return err
+				}
+
 			}
+
 		}
 	}
 
 	return nil
+}
+
+var dur_re = regexp.MustCompile(`(\d+)(\w+)`)
+
+func ParseDuration(expr string) (time.Duration, error) {
+	var d time.Duration
+	results := dur_re.FindAllStringSubmatch(expr, -1)
+	if len(results) == 0 {
+		return d, errors.New("Invalid. Must be Number followed by h,m,s,us,ms,ns,d")
+	}
+	num := results[0][1]
+	units := results[0][2]
+	i, err := strconv.ParseInt(num, 10, 64)
+	if err != nil {
+		return d, err
+	}
+	d = time.Duration(i)
+	switch units {
+	case "h", "hr", "hour", "hours":
+		d *= time.Hour
+	case "m", "min", "minute", "minutes":
+		d *= time.Minute
+	case "s", "sec", "second", "seconds":
+		d *= time.Second
+	case "us", "usec", "microsecond", "microseconds":
+		d *= time.Microsecond
+	case "ms", "msec", "millisecond", "milliseconds":
+		d *= time.Millisecond
+	case "ns", "nsec", "nanosecond", "nanoseconds":
+		d *= time.Nanosecond
+	case "d", "day", "days":
+		d *= 24 * time.Hour
+	default:
+		err = fmt.Errorf("Invalid unit %v. Must be h,m,s,us,ms,ns,d", units)
+	}
+	return d, err
+}
+
+func valueFromAggFunc(point btrdb.StatPoint, aggfunc mortarpb.AggFunc) float64 {
+	switch aggfunc {
+	case mortarpb.AggFunc_AGG_FUNC_MEAN:
+		return point.Mean
+	case mortarpb.AggFunc_AGG_FUNC_MIN:
+		return point.Min
+	case mortarpb.AggFunc_AGG_FUNC_MAX:
+		return point.Max
+	case mortarpb.AggFunc_AGG_FUNC_COUNT:
+		return float64(point.Count)
+	case mortarpb.AggFunc_AGG_FUNC_SUM:
+		return float64(point.Count) * point.Mean
+	}
+	return point.Mean
 }
