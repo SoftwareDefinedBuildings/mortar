@@ -161,8 +161,9 @@ func (stage *BrickQueryStage) processQuery(ctx Context) error {
 		// TODO: make this streaming?
 		ctx.done <- brickresp
 
-		stage.output <- ctx
 	}
+	// signal that we are done processing this stage (1x)
+	stage.output <- ctx
 	return nil
 }
 
