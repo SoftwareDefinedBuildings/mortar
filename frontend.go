@@ -94,7 +94,8 @@ func (stage *ApiFrontendBasicStage) String() string {
 }
 
 // identify which sites meet the requirements of the queries
-func (stage *ApiFrontendBasicStage) Qualify(context.Context, *mortarpb.QualifyRequest) (*mortarpb.QualifyResponse, error) {
+// TODO: implement Qualify
+func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortarpb.QualifyRequest) (*mortarpb.QualifyResponse, error) {
 	// have a small problem in the design. Currently, this is the frontend stage that connects to the outside world via exposing a
 	// GRPC server. it pushes requests into a channel to get consumed by the rest of the pipeline. The
 	// want a "pipeline" struct:
@@ -105,7 +106,39 @@ func (stage *ApiFrontendBasicStage) Qualify(context.Context, *mortarpb.QualifyRe
 	//		...,
 	//	 )
 	// The pipeline struct gives us a request/response interface that abstracts away the pipe and ties the inputs to the outputs.
-	return nil, nil
+
+	//TODO: get metadata from the request
+	headers, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, unauthorizedErr
+	}
+	if _tokens, ok := headers["token"]; ok && len(_tokens) > 0 && len(_tokens[0]) > 0 {
+		token := _tokens[0]
+		if _, authErr := stage.auth.verifyToken(token); authErr != nil {
+			return nil, authErr
+		}
+	} else {
+		return nil, errors.New("no auth key")
+	}
+	// here we are authenticated to the service.
+	validateErr := validateQualifyRequest(request)
+	if validateErr != nil {
+		return nil, validateErr
+	}
+
+	// prepare context for the execution
+	responseChan := make(chan *mortarpb.QualifyResponse)
+	queryCtx := Context{
+		ctx:             ctx,
+		qualify_request: *request,
+		qualify_done:    responseChan,
+	}
+
+	stage.output <- queryCtx
+	resp := <-responseChan
+	close(responseChan)
+
+	return resp, nil
 }
 
 // pull data from Mortar

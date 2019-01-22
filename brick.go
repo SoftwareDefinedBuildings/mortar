@@ -79,10 +79,18 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 			for {
 				select {
 				case ctx := <-input:
-					if err := stage.processQuery(ctx); err != nil {
-						log.Println(err)
-						ctx.response = nil
-						stage.output <- ctx
+					if len(ctx.request.Sites) > 0 {
+						if err := stage.processQuery(ctx); err != nil {
+							log.Println(err)
+							ctx.response = nil
+							stage.output <- ctx
+						}
+					} else if len(ctx.qualify_request.Required) > 0 {
+						if err := stage.processQualify(ctx); err != nil {
+							log.Println(err)
+							// TODO: not this! stage.output <- ctx
+							// need to exit
+						}
 					}
 				case <-stage.ctx.Done():
 					// case that breaks the stage and releases resources
@@ -119,6 +127,57 @@ func (stage *BrickQueryStage) GetQueue() chan Context {
 }
 func (stage *BrickQueryStage) String() string {
 	return "<| brick stage |>"
+}
+
+func (stage *BrickQueryStage) processQualify(ctx Context) error {
+	brickresp := &mortarpb.QualifyResponse{}
+	for _, querystring := range ctx.qualify_request.Required {
+		query, err := stage.db.ParseQuery(querystring, stage.highwatermark)
+		if err != nil {
+			ctx.addError(err)
+			return err
+		}
+
+		query.Graphs = []string{"*"}
+		// TODO: need to implement the query inside hod
+		version_query := &logpb.VersionQuery{
+			Graphs:    query.Graphs,
+			Filter:    logpb.TimeFilter_At,
+			Timestamp: time.Now().UnixNano(),
+		}
+		version_response, err := stage.db.Versions(ctx.ctx, version_query)
+		if err != nil {
+			ctx.addError(err)
+			return err
+		}
+		if version_response.Error != "" {
+			ctx.addError(errors.New(version_response.Error))
+			return err
+		}
+
+		var tmpsites []string
+		log.Debug(version_response)
+		for _, row := range version_response.Rows {
+			tmpsites = append(tmpsites, row.Values[0].Value)
+		}
+		log.Debug("Trying sites: ", tmpsites)
+
+		for _, site := range tmpsites {
+			query.Graphs = []string{site}
+			res, err := stage.db.Select(ctx.ctx, query)
+			log.Debug("Trying site ", site, " err? ", err, " rows ", len(res.Rows))
+			if err != nil {
+				ctx.addError(err)
+				//return err
+			}
+			if len(res.Rows) > 0 {
+				brickresp.Sites = append(brickresp.Sites, site)
+			}
+		}
+	}
+	ctx.qualify_done <- brickresp
+
+	return nil
 }
 
 func (stage *BrickQueryStage) processQuery(ctx Context) error {

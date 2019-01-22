@@ -1,7 +1,7 @@
 module git.sr.ht/~gabe/mortar
 
 require (
-	git.sr.ht/~gabe/hod v0.0.0-20190119043319-107b669e0912
+	git.sr.ht/~gabe/hod v0.0.0-20190122045123-e72ec8e18b0a
 	github.com/aws/aws-sdk-go v1.16.19
 	github.com/coreos/etcd v3.3.11+incompatible // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -21,12 +21,12 @@ require (
 	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/tinylib/msgp v1.1.0 // indirect
 	github.com/ugorji/go/codec v0.0.0-20181209151446-772ced7fd4c2 // indirect
-	golang.org/x/crypto v0.0.0-20190103213133-ff983b9c42bc
+	golang.org/x/crypto v0.0.0-20190122013713-64072686203f
 	golang.org/x/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
-	golang.org/x/net v0.0.0-20190110200230-915654e7eabc
+	golang.org/x/net v0.0.0-20190119204137-ed066c81e75e
 	golang.org/x/oauth2 v0.0.0-20190115181402-5dab4167f31c // indirect
-	golang.org/x/sys v0.0.0-20190116161447-11f53e031339 // indirect
-	golang.org/x/tools v0.0.0-20190118193359-16909d206f00 // indirect
+	golang.org/x/sys v0.0.0-20190121090251-770c60269bf0 // indirect
+	golang.org/x/tools v0.0.0-20190121143147-24cd39ecf745 // indirect
 	google.golang.org/genproto v0.0.0-20190111180523-db91494dd46c // indirect
 	google.golang.org/grpc v1.18.0
 	gopkg.in/BTrDB/btrdb.v4 v4.15.3 // indirect

@@ -13,12 +13,14 @@ var TS_BATCH_SIZE = 100
 var errStreamNotExist = errors.New("Stream does not exist")
 
 type Context struct {
-	ctx      context.Context
-	request  mortarpb.FetchRequest
-	response *mortarpb.FetchResponse
-	done     chan *mortarpb.FetchResponse
-	errors   []error
-	finished bool
+	ctx             context.Context
+	qualify_request mortarpb.QualifyRequest
+	request         mortarpb.FetchRequest
+	response        *mortarpb.FetchResponse
+	done            chan *mortarpb.FetchResponse
+	qualify_done    chan *mortarpb.QualifyResponse
+	errors          []error
+	finished        bool
 	sync.Mutex
 }
 

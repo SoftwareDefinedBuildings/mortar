@@ -62,3 +62,6 @@ func validateFetchRequest(req *mortarpb.FetchRequest) error {
 
 	return nil
 }
+func validateQualifyRequest(req *mortarpb.QualifyRequest) error {
+	return nil
+}

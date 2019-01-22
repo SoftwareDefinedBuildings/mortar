@@ -57,13 +57,15 @@ func NewTimeseriesQueryStage(cfg *TimeseriesStageConfig) (*TimeseriesQueryStage,
 			for {
 				select {
 				case ctx := <-input:
-					if err := stage.processQuery(ctx); err != nil {
-						log.Println(err)
+					fmt.Println(ctx.response)
+					if len(ctx.request.Sites) > 0 {
+						if err := stage.processQuery(ctx); err != nil {
+							log.Println(err)
+						}
 					}
 					ctx.response = nil
 					stage.output <- ctx
 					//ctx.done <- nil
-					// TODO: process query context
 				case <-stage.ctx.Done():
 					// case that breaks the stage and releases resources
 					fmt.Println("Ending Timeseries Queue")
@@ -75,9 +77,6 @@ func NewTimeseriesQueryStage(cfg *TimeseriesStageConfig) (*TimeseriesQueryStage,
 
 	return stage, nil
 }
-
-// TODO: write the helper function that retrieves data fro mthe timeseries database and adds it to the output channel.
-// TODO: the context needs t ocarry any errors forward
 
 func (stage *TimeseriesQueryStage) GetUpstream() Stage {
 	stage.Lock()
@@ -171,9 +170,6 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 
 	//ctx.request.TimeParams.window
 	//qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
-
-	//TODO: when we try to download multiple streams, a "nil" gets sent too
-	// early and causes the "done" channel to be closed
 
 	// loop over all streams, and then over all UUIDs
 	for _, reqstream := range ctx.request.Streams {
