@@ -78,11 +78,13 @@ class Client:
         # TODO: handle the refresh token recycling automatically for the user
         # TODO: break this out into a method that can be called when we notice that the token is expired
         if self._token is None:
-            response = self._client.GetAPIKey(mortar_pb2.GetAPIKeyRequest(username=self._cfg["username"],password=self._cfg["password"]))
-            print(response)
-            self._token = response.token
-            json.dump(self._token, open(".pymortartoken.json", "w"))
+            self._refresh()
 
+    def _refresh(self):
+        response = self._client.GetAPIKey(mortar_pb2.GetAPIKeyRequest(username=self._cfg["username"],password=self._cfg["password"]))
+        print(response)
+        self._token = response.token
+        json.dump(self._token, open(".pymortartoken.json", "w"))
 
 
     def fetch(self, request):
@@ -111,7 +113,15 @@ class Client:
 
             TODO: figure out how to add in the metadata component
         """
-        resp = self._client.Fetch(request, metadata=[('token', self._token)])
+        try:
+            resp = self._client.Fetch(request, metadata=[('token', self._token)])
+        except Exception as e:
+            if e.details() == 'parse jwt token err: Token is expired':
+                self._refresh()
+                return self.fetch(request)
+            else:
+                raise e
+
         builder = {}
         for x in resp:
             if x.error != "":
@@ -148,5 +158,12 @@ class Client:
         sites: list of str
             List of site names to be used in a subsequent fetch command
         """
-        resp = self._client.Qualify(QualifyRequest(required=required_queries), metadata=[('token', self._token)])
-        return resp
+        try:
+            resp = self._client.Qualify(QualifyRequest(required=required_queries), metadata=[('token', self._token)])
+            return resp
+        except Exception as e:
+            if e.details() == 'parse jwt token err: Token is expired':
+                self._refresh()
+                return self.qualify(required_queries)
+            else:
+                raise e
