@@ -2,7 +2,7 @@ __version__ = '0.1.0'
 from pymortar import mortar_pb2
 from pymortar import mortar_pb2_grpc
 
-from pymortar.mortar_pb2 import GetAPIKeyRequest, FetchRequest, Stream, TimeParams
+from pymortar.mortar_pb2 import GetAPIKeyRequest, FetchRequest, QualifyRequest, Stream, TimeParams
 
 from pymortar.mortar_pb2 import AGG_FUNC_RAW  as RAW
 from pymortar.mortar_pb2 import AGG_FUNC_MEAN as MEAN
@@ -133,3 +133,20 @@ class Client:
             ser = pd.Series(contents['values'], index=pd.to_datetime(contents['times']), name=uuidname)
             builder[uuidname] = ser[~ser.index.duplicated()]
         return pd.concat(builder.values(), axis=1)
+
+    def qualify(self, required_queries):
+        """
+        Calls the Mortar API Qualify command
+
+        Parameters
+        ----------
+        required_queries: list of str
+            list of queries we want to use to filter sites
+
+        Returns
+        -------
+        sites: list of str
+            List of site names to be used in a subsequent fetch command
+        """
+        resp = self._client.Qualify(QualifyRequest(required=required_queries), metadata=[('token', self._token)])
+        return resp
