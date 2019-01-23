@@ -86,19 +86,19 @@ class Result:
             )
 
     def build(self):
+        t = time.time()
         for uuidname, contents in self._series.items():
             ser = pd.concat(contents)
             ser = ser[~ser.index.duplicated()]
             self._series[uuidname] = ser
         self._df = pd.concat(self._series.values(), axis=1, copy=False)
+        t2 = time.time()
+        print("Building DF took {0}".format(t2-t))
 
     @property
     def df(self):
-        t = time.time()
         if self._df is None:
             self.build()
-        t2 = time.time()
-        print("Building DF took {0}".format(t2-t))
         return self._df
 
     @property
