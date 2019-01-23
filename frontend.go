@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"net"
 	"sync"
+	"time"
 )
 
 func init() {
@@ -96,6 +97,11 @@ func (stage *ApiFrontendBasicStage) String() string {
 // identify which sites meet the requirements of the queries
 func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortarpb.QualifyRequest) (*mortarpb.QualifyResponse, error) {
 
+	t := time.Now()
+
+	activeQueries.Inc()
+	defer activeQueries.Dec()
+	authRequests.Inc()
 	headers, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, unauthorizedErr
@@ -108,11 +114,14 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 	} else {
 		return nil, errors.New("no auth key")
 	}
+	authRequestsSuccessful.Inc()
 	// here we are authenticated to the service.
 	validateErr := validateQualifyRequest(request)
 	if validateErr != nil {
 		return nil, validateErr
 	}
+
+	qualifyQueriesProcessed.Inc()
 
 	// prepare context for the execution
 	responseChan := make(chan *mortarpb.QualifyResponse)
@@ -126,12 +135,18 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 	resp := <-responseChan
 	close(responseChan)
 
+	qualifyProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
+
 	return resp, nil
 }
 
 // pull data from Mortar
 // gets called from frontend by GRPC server
 func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client mortarpb.Mortar_FetchServer) error {
+	t := time.Now()
+	authRequests.Inc()
+	activeQueries.Inc()
+	defer activeQueries.Dec()
 	headers, ok := metadata.FromIncomingContext(client.Context())
 	if !ok {
 		return unauthorizedErr
@@ -144,12 +159,15 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	} else {
 		return errors.New("no auth key")
 	}
+	authRequestsSuccessful.Inc()
 
 	// here we are authenticated to the service.
 	validateErr := validateFetchRequest(request)
 	if validateErr != nil {
 		return validateErr
 	}
+
+	fetchQueriesProcessed.Inc()
 
 	responseChan := make(chan *mortarpb.FetchResponse)
 	queryCtx := Context{
@@ -161,6 +179,7 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	go func() {
 		var err error
 		for resp := range responseChan {
+			messagesSent.Inc()
 			if err = client.Send(resp); err != nil {
 				break
 			}
@@ -169,6 +188,7 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	}()
 	stage.output <- queryCtx
 	e := <-ret
+	fetchProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
 	return e
 }
 

@@ -8,8 +8,9 @@ type Config struct {
 	// configuration for amazon cognito
 	Cognito CognitoAuthConfig
 
-	ListenAddr string
-	BTrDBAddr  string
+	ListenAddr     string
+	BTrDBAddr      string
+	PrometheusAddr string
 }
 type CognitoAuthConfig struct {
 	// the client identifier for the app
@@ -34,9 +35,10 @@ func getCfg() *Config {
 	}
 
 	return &Config{
-		Cognito:    cognito,
-		ListenAddr: viper.GetString("ListenAddr"),
-		BTrDBAddr:  viper.GetString("BTrDBAddr"),
+		Cognito:        cognito,
+		ListenAddr:     viper.GetString("ListenAddr"),
+		BTrDBAddr:      viper.GetString("BTrDBAddr"),
+		PrometheusAddr: viper.GetString("PrometheusAddr"),
 	}
 }
 

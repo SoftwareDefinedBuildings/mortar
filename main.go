@@ -3,6 +3,45 @@ package main
 import (
 	"context"
 	"github.com/pkg/profile"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"net/http"
+)
+
+var (
+	qualifyQueriesProcessed = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "qualify_queries_processed",
+		Help: "total number of processed Qualify queries",
+	})
+	fetchQueriesProcessed = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "fetch_queries_processed",
+		Help: "total number of processed Fetch queries",
+	})
+	messagesSent = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "msgs_sent",
+		Help: "total number of sent messages",
+	})
+	qualifyProcessingTimes = promauto.NewSummary(prometheus.SummaryOpts{
+		Name: "qualify_processing_time_milliseconds",
+		Help: "amount of time it takes to process a qualify query",
+	})
+	fetchProcessingTimes = promauto.NewSummary(prometheus.SummaryOpts{
+		Name: "fetch_processing_time_milliseconds",
+		Help: "amount of time it takes to process a fetch query",
+	})
+	authRequests = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "auth_requests_received",
+		Help: "number of authentication requests we get",
+	})
+	authRequestsSuccessful = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "successful_auth_requests_received",
+		Help: "number of authentication requests we get that are successful",
+	})
+	activeQueries = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "active_queries",
+		Help: "number of actively processed queries",
+	})
 )
 
 func main() {
@@ -50,6 +89,14 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Info(cfg)
+
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		log.Infof("Prometheus endpoint at %s", cfg.PrometheusAddr)
+		if err := http.ListenAndServe(cfg.PrometheusAddr, nil); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	frontend_stage_cfg := &ApiFrontendBasicStageConfig{
 		StageContext: maincontext,
