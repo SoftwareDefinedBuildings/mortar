@@ -148,9 +148,11 @@ class Client:
         """
         try:
             resp = self._client.Qualify(QualifyRequest(required=required_queries), metadata=[('token', self._token)])
+            if resp.error:
+                raise Exception(resp.error)
             return resp
         except Exception as e:
-            if e.details() == 'parse jwt token err: Token is expired':
+            if hasattr(e, 'details') and e.details() == 'parse jwt token err: Token is expired':
                 self._refresh()
                 return self.qualify(required_queries)
             else:
