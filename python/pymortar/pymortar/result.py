@@ -86,6 +86,9 @@ class Result:
             )
 
     def build(self):
+        if len(self._series) == 0:
+            self._df = pd.DataFrame()
+            return
         t = time.time()
         for uuidname, contents in self._series.items():
             ser = pd.concat(contents)
