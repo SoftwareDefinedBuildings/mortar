@@ -1,4 +1,5 @@
 import sqlite3
+import time
 import pandas as pd
 
 _conn = sqlite3.connect(':memory:')
