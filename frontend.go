@@ -94,20 +94,8 @@ func (stage *ApiFrontendBasicStage) String() string {
 }
 
 // identify which sites meet the requirements of the queries
-// TODO: implement Qualify
 func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortarpb.QualifyRequest) (*mortarpb.QualifyResponse, error) {
-	// have a small problem in the design. Currently, this is the frontend stage that connects to the outside world via exposing a
-	// GRPC server. it pushes requests into a channel to get consumed by the rest of the pipeline. The
-	// want a "pipeline" struct:
-	//   pipeline := MakePipeline(
-	//	 	ApiFrontEndInstance,
-	//	    BrickQueryInstance,
-	//	    TimeseriesInstance,
-	//		...,
-	//	 )
-	// The pipeline struct gives us a request/response interface that abstracts away the pipe and ties the inputs to the outputs.
 
-	//TODO: get metadata from the request
 	headers, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, unauthorizedErr

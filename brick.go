@@ -65,7 +65,6 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO: rewrite query to get points and units
 	if _, err = stage.db.Select(stage.ctx, query); err != nil {
 		return nil, err
 	}
@@ -88,8 +87,8 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 					} else if len(ctx.qualify_request.Required) > 0 {
 						if err := stage.processQualify(ctx); err != nil {
 							log.Println(err)
-							// TODO: not this! stage.output <- ctx
-							// need to exit
+							ctx.response = nil
+							stage.output <- ctx
 						}
 					}
 				case <-stage.ctx.Done():
@@ -192,33 +191,38 @@ func (stage *BrickQueryStage) processQuery(ctx Context) error {
 		// property is how to relate the points to the timeseries database. However, it also introduces the complexity
 		// of dealing with whether or not the variables *do* have associated timeseries or not.
 		startIdx := rewriteQuery(reqstream.DataVars, query)
-		query.Graphs = ctx.request.Sites
-		res, err := stage.db.Select(ctx.ctx, query)
-		if err != nil {
-			ctx.addError(err)
-			//return err
-		}
-
-		// TODO: if we have no results from anywhere, need to notify the user and terminate early
-
-		// collate the UUIDs from query results and push into context.
-		// Because the rewritten query puts all of the new variables corresponding to the possible UUIDs at the end,
-		// the rewriteQuery method has to return the index that we start with when iterating through the variables in
-		// each row to make sure we get the actual queries.
-		stream := ctx.request.Streams[idx]
-
-		brickresp := &mortarpb.FetchResponse{}
-
-		for _, row := range res.Rows {
-			for uuidx := startIdx; uuidx < len(query.Vars); uuidx++ {
-				stream.Uuids = append(stream.Uuids, row.Values[uuidx].Value)
+		for _, sitename := range ctx.request.Sites {
+			query.Graphs = []string{sitename}
+			res, err := stage.db.Select(ctx.ctx, query)
+			if err != nil {
+				ctx.addError(err)
+				//return err
 			}
-			// we also add the query results to the output
-			brickresp.Rows = append(brickresp.Rows, transformRow(row))
+
+			// TODO: if we have no results from anywhere, need to notify the user and terminate early
+
+			// collate the UUIDs from query results and push into context.
+			// Because the rewritten query puts all of the new variables corresponding to the possible UUIDs at the end,
+			// the rewriteQuery method has to return the index that we start with when iterating through the variables in
+			// each row to make sure we get the actual queries.
+			stream := ctx.request.Streams[idx]
+
+			brickresp := &mortarpb.FetchResponse{}
+
+			brickresp.Variable = reqstream.Name
+			brickresp.Variables = res.Variables
+			brickresp.Site = sitename
+			for _, row := range res.Rows {
+				for uuidx := startIdx; uuidx < len(query.Vars); uuidx++ {
+					stream.Uuids = append(stream.Uuids, row.Values[uuidx].Value)
+				}
+				// we also add the query results to the output
+				brickresp.Rows = append(brickresp.Rows, transformRow(row))
+			}
+			// send the query results to the client
+			// TODO: make this streaming?
+			ctx.done <- brickresp
 		}
-		// send the query results to the client
-		// TODO: make this streaming?
-		ctx.done <- brickresp
 
 	}
 	// signal that we are done processing this stage (1x)
