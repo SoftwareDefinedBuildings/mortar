@@ -6,7 +6,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	dto "github.com/prometheus/client_model/go"
+	logrus "github.com/sirupsen/logrus"
 	"net/http"
+	"time"
 )
 
 var (
@@ -53,6 +56,74 @@ func main() {
 	if doBlockprofile {
 		defer profile.Start(profile.BlockProfile, profile.ProfilePath(".")).Stop()
 	}
+
+	// monitor the prometheus metrics and print them out periodically
+	go func() {
+		var (
+			qualifyQueriesProcessed_old float64 = 0
+			fetchQueriesProcessed_old   float64 = 0
+			messagesSent_old            float64 = 0
+			authRequests_old            float64 = 0
+			authRequestsSuccessful_old  float64 = 0
+			activeQueries_old           float64 = 0
+		)
+
+		var f = make(logrus.Fields)
+		for range time.Tick(10 * time.Second) {
+			var m dto.Metric
+
+			if err := qualifyQueriesProcessed.Write(&m); err != nil {
+				panic(err)
+			} else {
+				f["#qualify"] = *m.Counter.Value - qualifyQueriesProcessed_old
+				qualifyQueriesProcessed_old = *m.Counter.Value
+			}
+
+			if err := fetchQueriesProcessed.Write(&m); err != nil {
+				panic(err)
+			} else {
+				f["#fetch"] = *m.Counter.Value - fetchQueriesProcessed_old
+				fetchQueriesProcessed_old = *m.Counter.Value
+			}
+
+			if err := messagesSent.Write(&m); err != nil {
+				panic(err)
+			} else {
+				f["#msg"] = *m.Counter.Value - messagesSent_old
+				messagesSent_old = *m.Counter.Value
+			}
+
+			if err := authRequests.Write(&m); err != nil {
+				panic(err)
+			} else {
+				f["#auth raw"] = *m.Counter.Value - authRequests_old
+				authRequests_old = *m.Counter.Value
+			}
+
+			if err := authRequestsSuccessful.Write(&m); err != nil {
+				panic(err)
+			} else {
+				f["#auth good"] = *m.Counter.Value - authRequestsSuccessful_old
+				authRequestsSuccessful_old = *m.Counter.Value
+			}
+
+			if err := authRequestsSuccessful.Write(&m); err != nil {
+				panic(err)
+			} else {
+				f["#auth good"] = *m.Counter.Value - authRequestsSuccessful_old
+				authRequestsSuccessful_old = *m.Counter.Value
+			}
+
+			if err := activeQueries.Write(&m); err != nil {
+				panic(err)
+			} else {
+				f["#active"] = *m.Counter.Value - activeQueries_old
+				activeQueries_old = *m.Counter.Value
+			}
+
+			log.WithFields(f).Info(">")
+		}
+	}()
 
 	maincontext, cancel := context.WithCancel(context.Background())
 
