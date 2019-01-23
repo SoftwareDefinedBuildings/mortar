@@ -82,11 +82,15 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 						if err := stage.processQuery(ctx); err != nil {
 							log.Println(err)
 							ctx.response = nil
+							ctx.addError(err)
 							stage.output <- ctx
 						}
 					} else if len(ctx.qualify_request.Required) > 0 {
 						if err := stage.processQualify(ctx); err != nil {
-							log.Println(err)
+							log.Warning(ctx.errors)
+							ctx.qualify_done <- &mortarpb.QualifyResponse{
+								Error: err.Error(),
+							}
 							ctx.response = nil
 							stage.output <- ctx
 						}
@@ -133,7 +137,6 @@ func (stage *BrickQueryStage) processQualify(ctx Context) error {
 
 	sites := make(map[string]struct{})
 
-	// TODO: need to implement the query inside hod
 	version_query := &logpb.VersionQuery{
 		Graphs:    []string{"*"},
 		Filter:    logpb.TimeFilter_At,

@@ -57,7 +57,6 @@ func NewTimeseriesQueryStage(cfg *TimeseriesStageConfig) (*TimeseriesQueryStage,
 			for {
 				select {
 				case ctx := <-input:
-					fmt.Println(ctx.response)
 					if len(ctx.request.Sites) > 0 {
 						if err := stage.processQuery(ctx); err != nil {
 							log.Println(err)

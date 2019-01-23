@@ -69,7 +69,7 @@ func main() {
 		)
 
 		var f = make(logrus.Fields)
-		for range time.Tick(10 * time.Second) {
+		for range time.Tick(30 * time.Second) {
 			var m dto.Metric
 
 			if err := qualifyQueriesProcessed.Write(&m); err != nil {
@@ -212,7 +212,12 @@ func main() {
 		c := ts_stage.GetQueue()
 		for out := range c {
 			if out.response == nil {
-				close(out.done)
+				if out.done != nil {
+					close(out.done)
+				}
+				if out.qualify_done != nil {
+					close(out.qualify_done)
+				}
 			} else {
 				out.done <- out.response
 			}
