@@ -1,6 +1,8 @@
 import sqlite3
 import pandas as pd
 
+_conn = sqlite3.connect(':memory:')
+
 def format_uri(uri):
     if uri.namespace:
         return uri.namespace+"#"+uri.value
@@ -8,14 +10,13 @@ def format_uri(uri):
         return uri.value
 
 def make_table(tablename, varnames):
-    conn = sqlite3.connect(':memory:')
-    c = conn.cursor()
+    c = _conn.cursor()
     colnames = []
     for varname in varnames:
         varname = varname.lstrip('?')
         colnames.append( "{0} text".format(varname) )
     c.execute("CREATE TABLE {0} ({1}, site text)".format(tablename, ", ".join(colnames)))
-    return conn
+    return _conn
 
 """
 The result object helps pymortar build from streaming responses to a query,
@@ -36,6 +37,17 @@ class Result:
         self._df = None
         self._tables = {}
 
+    def __repr__(self):
+        numtables = len(self._tables) if self._tables else "n/a"
+        numcols = len(self._df.columns) if self._df is not None else "n/a"
+        numvals = len(self._df) if self._df is not None else "n/a"
+        values = [
+            "tables:{0}".format(numtables),
+            "cols:{0}".format(numcols),
+            "vals:{0}".format(numvals)
+        ]
+        return "<pymortar.result.Result: {0}>".format(" ".join(values))
+
     def add(self, resp):
         """
         Adds the next FetchResponse object from the streaming call into
@@ -52,17 +64,17 @@ class Result:
             raise Exception(resp.error)
 
 
-        #if resp.variable not in self._table and len(resp.variables) > 0:
-        #    self._table[resp.variable] = make_table(resp.variable, resp.variables)
-        #    self._tables[resp.variable] = list(map(lambda x: x.lstrip("?"), resp.variables))
-        #    self._tables[resp.variable].append("site")
+        if resp.variable not in self._tables and len(resp.variables) > 0:
+            self._table = make_table(resp.variable, resp.variables)
+            self._tables[resp.variable] = list(map(lambda x: x.lstrip("?"), resp.variables))
+            self._tables[resp.variable].append("site")
 
-        #if resp.variable in self._table:
-        #    c = self._table[resp.variable].cursor()
-        #    for row in resp.rows:
-        #        values = ['"{0}"'.format(format_uri(u)) for u in row.values]
-        #        values.append('"{0}"'.format(resp.site))
-        #        c.execute("INSERT INTO {0} values ({1})".format(resp.variable, ", ".join(values)))
+        if resp.variable in self._tables:
+            c = self._table.cursor()
+            for row in resp.rows:
+                values = ['"{0}"'.format(format_uri(u)) for u in row.values]
+                values.append('"{0}"'.format(resp.site))
+                c.execute("INSERT INTO {0} values ({1})".format(resp.variable, ", ".join(values)))
 
         # SELECT * FROM sqlite_master;
         if resp.identifier:
@@ -81,8 +93,11 @@ class Result:
 
     @property
     def df(self):
+        t = time.time()
         if self._df is None:
-            self.build
+            self.build()
+        t2 = time.time()
+        print("Building DF took {0}".format(t2-t))
         return self._df
 
     @property
