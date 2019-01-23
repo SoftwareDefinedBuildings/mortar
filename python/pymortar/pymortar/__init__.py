@@ -1,6 +1,7 @@
 __version__ = '0.1.0'
 from pymortar import mortar_pb2
 from pymortar import mortar_pb2_grpc
+from pymortar.result import Result
 
 from pymortar.mortar_pb2 import GetAPIKeyRequest, FetchRequest, QualifyRequest, Stream, TimeParams
 
@@ -122,27 +123,14 @@ class Client:
             else:
                 raise e
 
-        builder = {}
+        res = Result()
         for x in resp:
             if x.error != "":
                 logging.error(x.error)
                 break
-            if x.identifier not in builder:
-                builder[x.identifier] = {'values': [], 'times': []}
-            builder[x.identifier]['values'].extend(x.values)
-            builder[x.identifier]['times'].extend(x.times)
-        # copy the existing items because we are going to manipulate the dictionary
-        # during the iteration
-        items = list(builder.items())
-        for uuidname, contents in items:
-            # if its empty, then do not include the column in what is returned
-            # TODO: why do we get empty uuids?
-            if not uuidname:
-                del builder[uuidname]
-                continue
-            ser = pd.Series(contents['values'], index=pd.to_datetime(contents['times']), name=uuidname)
-            builder[uuidname] = ser[~ser.index.duplicated()]
-        return pd.concat(builder.values(), axis=1)
+            res.add(x)
+        res.build()
+        return res
 
     def qualify(self, required_queries):
         """
