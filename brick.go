@@ -130,6 +130,29 @@ func (stage *BrickQueryStage) String() string {
 
 func (stage *BrickQueryStage) processQualify(ctx Context) error {
 	brickresp := &mortarpb.QualifyResponse{}
+
+	sites := make(map[string]struct{})
+
+	// TODO: need to implement the query inside hod
+	version_query := &logpb.VersionQuery{
+		Graphs:    []string{"*"},
+		Filter:    logpb.TimeFilter_At,
+		Timestamp: time.Now().UnixNano(),
+	}
+	version_response, err := stage.db.Versions(ctx.ctx, version_query)
+	if err != nil {
+		ctx.addError(err)
+		return err
+	}
+	if version_response.Error != "" {
+		ctx.addError(errors.New(version_response.Error))
+		return err
+	}
+
+	for _, row := range version_response.Rows {
+		sites[row.Values[0].Value] = struct{}{}
+	}
+
 	for _, querystring := range ctx.qualify_request.Required {
 		query, err := stage.db.ParseQuery(querystring, stage.highwatermark)
 		if err != nil {
@@ -137,42 +160,19 @@ func (stage *BrickQueryStage) processQualify(ctx Context) error {
 			return err
 		}
 
-		query.Graphs = []string{"*"}
-		// TODO: need to implement the query inside hod
-		version_query := &logpb.VersionQuery{
-			Graphs:    query.Graphs,
-			Filter:    logpb.TimeFilter_At,
-			Timestamp: time.Now().UnixNano(),
-		}
-		version_response, err := stage.db.Versions(ctx.ctx, version_query)
-		if err != nil {
-			ctx.addError(err)
-			return err
-		}
-		if version_response.Error != "" {
-			ctx.addError(errors.New(version_response.Error))
-			return err
-		}
-
-		var tmpsites []string
-		log.Debug(version_response)
-		for _, row := range version_response.Rows {
-			tmpsites = append(tmpsites, row.Values[0].Value)
-		}
-		log.Debug("Trying sites: ", tmpsites)
-
-		for _, site := range tmpsites {
+		for site := range sites {
 			query.Graphs = []string{site}
 			res, err := stage.db.Select(ctx.ctx, query)
-			log.Debug("Trying site ", site, " err? ", err, " rows ", len(res.Rows))
 			if err != nil {
 				ctx.addError(err)
 				//return err
-			}
-			if len(res.Rows) > 0 {
-				brickresp.Sites = append(brickresp.Sites, site)
+			} else if len(res.Rows) == 0 {
+				delete(sites, site)
 			}
 		}
+	}
+	for site := range sites {
+		brickresp.Sites = append(brickresp.Sites, site)
 	}
 	ctx.qualify_done <- brickresp
 
