@@ -65,7 +65,6 @@ func main() {
 			messagesSent_old            float64 = 0
 			authRequests_old            float64 = 0
 			authRequestsSuccessful_old  float64 = 0
-			activeQueries_old           float64 = 0
 		)
 
 		var f = make(logrus.Fields)
@@ -107,18 +106,10 @@ func main() {
 				authRequestsSuccessful_old = *m.Counter.Value
 			}
 
-			if err := authRequestsSuccessful.Write(&m); err != nil {
-				panic(err)
-			} else {
-				f["#auth good"] = *m.Counter.Value - authRequestsSuccessful_old
-				authRequestsSuccessful_old = *m.Counter.Value
-			}
-
 			if err := activeQueries.Write(&m); err != nil {
 				panic(err)
 			} else {
-				f["#active"] = *m.Counter.Value - activeQueries_old
-				activeQueries_old = *m.Counter.Value
+				f["#active"] = *m.Gauge.Value
 			}
 
 			log.WithFields(f).Info(">")
