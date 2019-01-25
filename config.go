@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/spf13/viper"
+	"os"
 )
 
 type Config struct {
@@ -26,6 +27,17 @@ type CognitoAuthConfig struct {
 }
 
 func getCfg() *Config {
+	viper.SetDefault("Cognito.AppClientId", os.Getenv("COGNITO_APP_CLIENT_ID"))
+	viper.SetDefault("Cognito.AppClientSecret", os.Getenv("COGNITO_APP_CLIENT_SECRET"))
+	viper.SetDefault("Cognito.PoolId", os.Getenv("COGNITO_POOL_ID"))
+	viper.SetDefault("Cognito.JWKUrl", os.Getenv("COGNITO_JWK_URL"))
+	viper.SetDefault("Cognito.Region", os.Getenv("COGNITO_REGION"))
+	viper.SetDefault("Cognito.Region", os.Getenv("COGNITO_REGION"))
+	viper.SetDefault("BTrDBAddr", os.Getenv("BTRDB_ADDRESS"))
+	viper.SetDefault("ListenAddr", os.Getenv("LISTEN_ADDRESS"))
+	viper.SetDefault("PrometheusAddr", os.Getenv("PROMETHEUS_ADDRESS"))
+
+	log.Warning(viper.GetString("BTrDBAddr"))
 	cognito := CognitoAuthConfig{
 		AppClientId:     viper.GetString("Cognito.AppClientId"),
 		AppClientSecret: viper.GetString("Cognito.AppClientSecret"),

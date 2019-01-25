@@ -150,7 +150,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Info(cfg)
+	log.Infof("%+v", cfg)
 
 	http.Handle("/metrics", promhttp.Handler())
 	go func() {
