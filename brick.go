@@ -34,8 +34,9 @@ type BrickQueryStage struct {
 }
 
 type BrickQueryStageConfig struct {
-	Upstream     Stage
-	StageContext context.Context
+	Upstream          Stage
+	StageContext      context.Context
+	HodConfigLocation string
 }
 
 func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
@@ -50,7 +51,7 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 
 	log.Info("Start loading Brick config")
 	start := time.Now()
-	hodcfg, err := hod.ReadConfig("hodconfig.yml")
+	hodcfg, err := hod.ReadConfig(cfg.HodConfigLocation)
 	if err != nil {
 		return nil, err
 	}

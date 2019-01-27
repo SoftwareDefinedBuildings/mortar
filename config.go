@@ -9,6 +9,7 @@ type Config struct {
 	// configuration for amazon cognito
 	Cognito CognitoAuthConfig
 
+	HodConfig      string
 	ListenAddr     string
 	BTrDBAddr      string
 	PrometheusAddr string
@@ -33,6 +34,7 @@ func getCfg() *Config {
 	viper.SetDefault("Cognito.JWKUrl", os.Getenv("COGNITO_JWK_URL"))
 	viper.SetDefault("Cognito.Region", os.Getenv("COGNITO_REGION"))
 	viper.SetDefault("Cognito.Region", os.Getenv("COGNITO_REGION"))
+	viper.SetDefault("HodConfig", os.Getenv("HODCONFIG_LOCATION"))
 	viper.SetDefault("BTrDBAddr", os.Getenv("BTRDB_ADDRESS"))
 	viper.SetDefault("ListenAddr", os.Getenv("LISTEN_ADDRESS"))
 	viper.SetDefault("PrometheusAddr", os.Getenv("PROMETHEUS_ADDRESS"))
@@ -48,6 +50,7 @@ func getCfg() *Config {
 
 	return &Config{
 		Cognito:        cognito,
+		HodConfig:      viper.GetString("HodConfig"),
 		ListenAddr:     viper.GetString("ListenAddr"),
 		BTrDBAddr:      viper.GetString("BTrDBAddr"),
 		PrometheusAddr: viper.GetString("PrometheusAddr"),

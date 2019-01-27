@@ -171,8 +171,9 @@ func main() {
 	}
 
 	md_stage_cfg := &BrickQueryStageConfig{
-		Upstream:     frontend_stage,
-		StageContext: maincontext,
+		Upstream:          frontend_stage,
+		StageContext:      maincontext,
+		HodConfigLocation: cfg.HodConfig,
 	}
 
 	md_stage, err := NewBrickQueryStage(md_stage_cfg)
