@@ -1,0 +1,5 @@
+pymortar>=0.2.6a0
+grpcio
+googleapis-common-protos
+grpcio-tools
+pandas

@@ -1,0 +1,11 @@
+# COGNITO_APP_CLIENT_ID
+# COGNITO_APP_CLIENT_SECRET
+# COGNITO_POOL_ID
+# COGNITO_JWK_URL
+# COGNITO_REGION
+# BTRDB_ADDRESS
+# other aws secrets through iam
+# https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/#create-a-pod-that-has-access-to-the-secret-data-through-environment-variables
+#ListenAddr: "0.0.0.0:4587"
+#PrometheusAddr: "0.0.0.0:9091"
+HodConfig: /etc/hod/hodconfig.yml
