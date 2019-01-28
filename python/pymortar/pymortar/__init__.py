@@ -30,13 +30,13 @@ class Client:
         Contains the configuration information for connecting to the Mortar API.
         Expects the following keys:
 
-        mortar_address: address + port to connect to, e.g. "localhost:9001". Defaults to
-                        looking up $MORTAR_API_ADDRESS from the environment.
+        mortar_address: address + port to connect to, e.g. "localhost:9001".
+                        Defaults to $MORTAR_API_ADDRESS from the environment.
         mortar_cert: relative file path to the mortardata api server certificate. If this is not
-                     specified, then it defaults to an insecure connection.
-                     **This is not recommended!**
-        username: your Mortar API username
-        password: your Mortar API password
+                     specified, then it defaults to an insecure connection (not recommended).
+                     Defaults to MORTAR_API_CERT
+        username: your Mortar API username. Defaults to MORTAR_API_USERNAME
+        password: your Mortar API password. Defaults to MORTAR_API_PASSWORD
 
     Returns
     -------
@@ -45,6 +45,13 @@ class Client:
     """
     def __init__(self, cfg):
         self._cfg = cfg
+
+        # get username/password from environment or config file
+        if 'username' not in self._cfg or not self._cfg['username']:
+            self._cfg['username'] = os.environ.get('MORTAR_API_USERNAME')
+        if 'password' not in self._cfg or not self._cfg['password']:
+            self._cfg['password'] = os.environ.get('MORTAR_API_PASSWORD')
+
         if self._cfg.get('mortar_address') is None:
             self._mortar_address = os.environ.get('MORTAR_API_ADDRESS','corbusier.cs.berkeley.edu:9001')
         else:
@@ -53,13 +60,15 @@ class Client:
         # setup GRPC client
         # need options: insecure/secure (if mortar_cert provided),
         # gzip
-        if self._cfg.get('mortar_cert') is None:
+        cert = os.environ.get('MORTAR_API_CERT', None)
+        if self._cfg.get('mortar_cert') is None and cert is None:
             # TODO: check https://github.com/grpc/grpc/blob/master/src/python/grpcio_tests/tests/unit/_compression_test.py
             self._channel = grpc.insecure_channel(self._mortar_address, options=[
                 ('grpc.default_compression_algorithm', 2)
             ])
         else:
-            # TODO: read trusted_certs from server.crt file
+            # TODO: read trusted_certs from server.crt file or cert variable
+            #trusted_certs = [cert]
             credentials = grpc.ssl_channel_credentials(root_certificates=trusted_certs)
             self._channel = grpc.secure_channel(self._mortar_address, credentials, options=[
                 ('grpc.default_compression_algorithm', 2) # 2 is GZIP
