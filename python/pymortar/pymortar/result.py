@@ -2,7 +2,6 @@ import sqlite3
 import time
 import pandas as pd
 
-_conn = sqlite3.connect(':memory:')
 
 def format_uri(uri):
     if uri.namespace:
@@ -10,7 +9,7 @@ def format_uri(uri):
     else:
         return uri.value
 
-def make_table(tablename, varnames):
+def make_table(_conn, tablename, varnames):
     c = _conn.cursor()
     colnames = []
     for varname in varnames:
@@ -33,7 +32,8 @@ class Result:
             A Result object
         """
 
-        self._table = {}
+        # result object has its own sqlite3 in-memory database
+        self.conn = sqlite3.connect(':memory:')
         self._series = {}
         self._df = None
         self._tables = {}
@@ -66,12 +66,12 @@ class Result:
 
 
         if resp.variable not in self._tables and len(resp.variables) > 0:
-            self._table = make_table(resp.variable, resp.variables)
+            make_table(self.conn, resp.variable, resp.variables)
             self._tables[resp.variable] = list(map(lambda x: x.lstrip("?"), resp.variables))
             self._tables[resp.variable].append("site")
 
         if resp.variable in self._tables:
-            c = self._table.cursor()
+            c = self.conn.cursor()
             for row in resp.rows:
                 values = ['"{0}"'.format(format_uri(u)) for u in row.values]
                 values.append('"{0}"'.format(resp.site))
@@ -112,5 +112,5 @@ class Result:
         return self._tables[table]
 
     def query(self, q):
-        c = self._table.cursor()
+        c = self.conn.cursor()
         return list(c.execute(q))
