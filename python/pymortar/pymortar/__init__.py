@@ -53,26 +53,15 @@ class Client:
             self._cfg['password'] = os.environ.get('MORTAR_API_PASSWORD')
 
         if self._cfg.get('mortar_address') is None:
-            self._mortar_address = os.environ.get('MORTAR_API_ADDRESS','corbusier.cs.berkeley.edu:9001')
+            self._mortar_address = os.environ.get('MORTAR_API_ADDRESS','mortardata.org:9001')
         else:
             self._mortar_address = self._cfg.get('mortar_address')
 
-        # setup GRPC client
-        # need options: insecure/secure (if mortar_cert provided),
-        # gzip
-        cert = os.environ.get('MORTAR_API_CERT', None)
-        if self._cfg.get('mortar_cert') is None and cert is None:
-            # TODO: check https://github.com/grpc/grpc/blob/master/src/python/grpcio_tests/tests/unit/_compression_test.py
-            self._channel = grpc.insecure_channel(self._mortar_address, options=[
-                ('grpc.default_compression_algorithm', 2)
-            ])
-        else:
-            # TODO: read trusted_certs from server.crt file or cert variable
-            #trusted_certs = [cert]
-            credentials = grpc.ssl_channel_credentials(root_certificates=trusted_certs)
-            self._channel = grpc.secure_channel(self._mortar_address, credentials, options=[
-                ('grpc.default_compression_algorithm', 2) # 2 is GZIP
-            ])
+        # setup GRPC client: gzip + tls
+        credentials = grpc.ssl_channel_credentials()
+        self._channel = grpc.secure_channel(self._mortar_address, credentials, options=[
+	    ('grpc.default_compression_algorithm', 2) # 2 is GZIP
+	])
 
         self._client = mortar_pb2_grpc.MortarStub(self._channel)
 
