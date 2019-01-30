@@ -10,11 +10,11 @@ container: build
 	docker build -t mortar/$(APP):$(RELEASE) containers/mortar-server
 
 client-container:
-	cd containers/pymortar-client && bash generate-ssl.sh
 	docker build -t mortar/pymortar-client:$(RELEASE) containers/pymortar-client
 
 run-client: client-container
-	docker run -p 8889:8888 --name mortar -e USE_HTTPS=yes -e MORTAR_API_ADDRESS=mortardata.org:9001 -e MORTAR_API_USERNAME=$(MORTAR_API_USERNAME) -e MORTAR_API_PASSWORD=$(MORTAR_API_PASSWORD) --rm mortar/pymortar-client:$(RELEASE)
+	bash containers/pymortar-client/generate-ssl.sh
+	docker run -p 8889:8888 --name mortar -e USE_HTTPS=yes -e MORTAR_API_ADDRESS=mortardata.org:9001 -e MORTAR_API_USERNAME=$(MORTAR_API_USERNAME) -e MORTAR_API_PASSWORD=$(MORTAR_API_PASSWORD) -v `pwd`/certs:/certs --rm mortar/pymortar-client:$(RELEASE)
 
 push: container client-container
 	docker push mortar/$(APP):$(RELEASE)
