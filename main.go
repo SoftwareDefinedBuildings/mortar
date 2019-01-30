@@ -164,6 +164,8 @@ func main() {
 		StageContext: maincontext,
 		ListenAddr:   cfg.ListenAddr,
 		AuthConfig:   cfg.Cognito,
+		TLSCrtFile:   cfg.TLSCrtFile,
+		TLSKeyFile:   cfg.TLSKeyFile,
 	}
 	frontend_stage, err := NewApiFrontendBasicStage(frontend_stage_cfg)
 	if err != nil {

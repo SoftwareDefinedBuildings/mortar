@@ -30,8 +30,8 @@ type ApiFrontendBasicStage struct {
 }
 
 type ApiFrontendBasicStageConfig struct {
-	TLSHost      string
-	TLSCacheDir  string
+	TLSCrtFile   string
+	TLSKeyFile   string
 	ListenAddr   string
 	AuthConfig   CognitoAuthConfig
 	Upstream     Stage
@@ -53,12 +53,19 @@ func NewApiFrontendBasicStage(cfg *ApiFrontendBasicStageConfig) (*ApiFrontendBas
 	var server *grpc.Server
 
 	// handle TLS if it is configured
-	if cfg.TLSHost != "" {
-		tls, err := GetTLS(cfg.TLSHost, cfg.TLSCacheDir)
+	log.Infof("Cert file: %s, Key file: %s", cfg.TLSCrtFile, cfg.TLSKeyFile)
+	if cfg.TLSCrtFile != "" && cfg.TLSKeyFile != "" {
+		creds, err := credentials.NewServerTLSFromFile(cfg.TLSCrtFile, cfg.TLSKeyFile)
 		if err != nil {
-			return nil, errors.Wrap(err, "Could not get TLS cert")
+			return nil, errors.Wrap(err, "could not load TLS keys")
 		}
-		creds := credentials.NewTLS(tls)
+		// this is the lets-encrypt code that we aren't using
+		//tls, err := GetTLS(cfg.TLSHost, cfg.TLSCacheDir)
+		//if err != nil {
+		//	return nil, errors.Wrap(err, "Could not get TLS cert")
+		//}
+		//creds := credentials.NewTLS(tls)
+		log.Info("Using TLS")
 		server = grpc.NewServer(
 			grpc.Creds(creds),
 		)

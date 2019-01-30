@@ -13,6 +13,9 @@ type Config struct {
 	ListenAddr     string
 	BTrDBAddr      string
 	PrometheusAddr string
+
+	TLSCrtFile string
+	TLSKeyFile string
 }
 type CognitoAuthConfig struct {
 	// the client identifier for the app
@@ -38,6 +41,8 @@ func getCfg() *Config {
 	viper.SetDefault("BTrDBAddr", os.Getenv("BTRDB_ADDRESS"))
 	viper.SetDefault("ListenAddr", os.Getenv("LISTEN_ADDRESS"))
 	viper.SetDefault("PrometheusAddr", os.Getenv("PROMETHEUS_ADDRESS"))
+	viper.SetDefault("TLSCrtFile", os.Getenv("MORTAR_TLS_CRT_FILE"))
+	viper.SetDefault("TLSKeyFile", os.Getenv("MORTAR_TLS_KEY_FILE"))
 
 	log.Warning(viper.GetString("BTrDBAddr"))
 	cognito := CognitoAuthConfig{
@@ -54,6 +59,8 @@ func getCfg() *Config {
 		ListenAddr:     viper.GetString("ListenAddr"),
 		BTrDBAddr:      viper.GetString("BTrDBAddr"),
 		PrometheusAddr: viper.GetString("PrometheusAddr"),
+		TLSCrtFile:     viper.GetString("TLSCrtFile"),
+		TLSKeyFile:     viper.GetString("TLSKeyFile"),
 	}
 }
 
