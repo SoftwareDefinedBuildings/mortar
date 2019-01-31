@@ -1,10 +1,8 @@
 APP?=mortar
 RELEASE?=0.0.11
 MORTAR_REPOSITORY?=https://github.com/SoftwareDefinedBuildings/mortar-analytics
-.PHONY: proto
+.PHONY: proto frontend
 
-run: build clean
-	./mortar
 
 container: build
 	cp mortar containers/mortar-server
@@ -17,6 +15,15 @@ client-container:
 
 mortar-analytics:
 	git clone $(MORTAR_REPOSITORY) mortar-analytics
+
+frontend:
+	mkdocs build
+	cp -r site/ frontend/static/
+	go build -o frontend/exec-frontend ./frontend
+	cd frontend && ./exec-frontend
+
+run: build clean
+	./mortar
 
 run-client: client-container mortar-analytics
 	bash containers/pymortar-client/generate-ssl.sh
