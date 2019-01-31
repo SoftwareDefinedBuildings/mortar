@@ -9,9 +9,11 @@ run: build clean
 container: build
 	cp mortar containers/mortar-server
 	docker build -t mortar/$(APP):$(RELEASE) containers/mortar-server
+	docker build -t mortar/$(APP):latest containers/mortar-server
 
 client-container:
 	docker build -t mortar/pymortar-client:$(RELEASE) containers/pymortar-client
+	docker build -t mortar/pymortar-client:latest containers/pymortar-client
 
 mortar-analytics:
 	git clone $(MORTAR_REPOSITORY) mortar-analytics
@@ -22,7 +24,9 @@ run-client: client-container mortar-analytics
 
 push: container client-container
 	docker push mortar/$(APP):$(RELEASE)
+	docker push mortar/$(APP):latest
 	docker push mortar/pymortar-client:$(RELEASE)
+	docker push mortar/pymortar-client:latest
 
 build:
 	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go build -o mortar
