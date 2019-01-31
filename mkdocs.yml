@@ -1,0 +1,4 @@
+site_name: Mortar Documentation
+repo_url: https://git.sr.ht/~gabe/mortar/
+theme:
+    name: 'material'
