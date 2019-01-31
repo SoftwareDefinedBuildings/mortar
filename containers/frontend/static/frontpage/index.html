@@ -1,0 +1,108 @@
+<html>
+    <head>
+        <link href='css/fontcss.css' rel="stylesheet">
+        <link href="css/vuetify.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="css/all.css">
+        <meta name="css/viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+		<link href="css/codemirror.css" rel="stylesheet">
+        <link href="css/vis-network.min.css" rel="stylesheet">
+        <link href="css/site.css" rel="stylesheet">
+        <title>Mortar Testbed</title>
+    </head>
+    <body>
+        <div id="app">
+			<template>
+			  <v-app id="inspire">
+				<v-navigation-drawer
+				  v-model="drawer"
+				  fixed
+				  app
+				>
+				  <v-list dense>
+					<v-list-tile @click="router.push('/')">
+					  <v-list-tile-action>
+						<v-icon>home</v-icon>
+					  </v-list-tile-action>
+					  <v-list-tile-content>
+						<v-list-tile-title>Home</v-list-tile-title>
+					  </v-list-tile-content>
+					</v-list-tile>
+
+					<v-list-tile @click="router.push('/about')">
+					  <v-list-tile-action>
+						<v-icon>info</v-icon>
+					  </v-list-tile-action>
+					  <v-list-tile-content>
+						<v-list-tile-title>About</v-list-tile-title>
+					  </v-list-tile-content>
+					</v-list-tile>
+
+					<v-list-tile @click="alert('page not finished')">
+					  <v-list-tile-action>
+						<v-icon>view_list</v-icon>
+					  </v-list-tile-action>
+					  <v-list-tile-content>
+						<v-list-tile-title>Site List</v-list-tile-title>
+					  </v-list-tile-content>
+					</v-list-tile>
+
+					<v-list-tile @click="alert('page not finished')">
+					  <v-list-tile-action>
+						<v-icon>show_chart</v-icon>
+					  </v-list-tile-action>
+					  <v-list-tile-content>
+						<v-list-tile-title>Data Browser</v-list-tile-title>
+					  </v-list-tile-content>
+					</v-list-tile>
+
+					<v-list-tile @click="router.push('/')">
+					  <v-list-tile-action>
+						<v-icon>scatter_plot</v-icon>
+					  </v-list-tile-action>
+					  <v-list-tile-content>
+						<v-list-tile-title>Brick Browser</v-list-tile-title>
+					  </v-list-tile-content>
+					</v-list-tile>
+
+
+
+				  </v-list>
+				</v-navigation-drawer>
+				<v-toolbar color="blue darken-3" dark fixed app>
+				  <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
+				  <v-toolbar-title>Mortar Testbed</v-toolbar-title>
+				</v-toolbar>
+				<v-content>
+				  <v-container fluid>
+					<router-view></router-view>
+				  </v-container>
+				</v-content>
+				<v-footer color="blue darken-3" app>
+                  <v-spacer></v-spacer>
+                  <div class="white--text">&copy; {{ new Date().getFullYear() }} UC Berkeley</div>
+                  <v-spacer></v-spacer>
+                  <a class="white--text" id="myLink" title="Click to do something" href="PleaseEnableJavascript.html" onclick="cache.clear();console.log('cleared cache');return false;">Clear Cache</a>
+                  <v-spacer></v-spacer>
+				</v-footer>
+			  </v-app>
+			</template>
+        </div>
+
+		<script src="js/localforage.min.js"></script>
+		<script src="js/d3.v4.min.js"></script>
+        <script src="js/vue.js"></script>
+        <script src="js/vue-router.js"></script>
+        <script src="js/vuetify.js"></script>
+        <script src="js/dygraph.min.js"></script>
+        <script src="js/swagger-client.js" type="text/javascript"></script>
+        <!--<script src="https://cdn.date-fns.org/v1.0.0/date_fns.min.js"></script>-->
+        <script src="js/date_fns.min.js" type="text/javascript"></script>
+        <script src="js/vue-rangedate-picker.min.js" type="text/javascript"></script>
+		<script src="js/codemirror.js"></script>
+        <script src="js/addon/edit/matchbrackets.js"></script>
+        <script src="js/mode/sparql/sparql.js"></script>
+        <script src="js/mode/python/python.js"></script>
+        <script src="js/vis.js"></script>
+        <script src="js/app.js" type="text/javascript"></script>
+    </body>
+</html>

@@ -13,6 +13,13 @@ client-container:
 	docker build -t mortar/pymortar-client:$(RELEASE) containers/pymortar-client
 	docker build -t mortar/pymortar-client:latest containers/pymortar-client
 
+frontend-container:
+	mkdocs build
+	mkdir -p containers/frontend/static/site
+	cp -r site/* containers/frontend/static/site/
+	go build -o containers/frontend/exec-frontend ./frontend
+	docker build -t mortar/frontend:latest containers/frontend
+
 mortar-analytics:
 	git clone $(MORTAR_REPOSITORY) mortar-analytics
 
@@ -29,11 +36,15 @@ run-client: client-container mortar-analytics
 	bash containers/pymortar-client/generate-ssl.sh
 	docker run -p 8889:8888 --name mortar -v `pwd`/mortar-analytics:/home/jovyan/mortar-analytics -e USE_HTTPS=yes -e MORTAR_API_ADDRESS=mortardata.org:9001 -e MORTAR_API_USERNAME=$(MORTAR_API_USERNAME) -e MORTAR_API_PASSWORD=$(MORTAR_API_PASSWORD) -v `pwd`/certs:/certs --rm mortar/pymortar-client:$(RELEASE)
 
+run-frontend: frontend-container
+	docker run -p 3000:3000 --name mortar-frontend --rm mortar/frontend:latest
+
 push: container client-container
 	docker push mortar/$(APP):$(RELEASE)
 	docker push mortar/$(APP):latest
 	docker push mortar/pymortar-client:$(RELEASE)
 	docker push mortar/pymortar-client:latest
+	docker push mortar/frontend:latest
 
 build:
 	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go build -o mortar
