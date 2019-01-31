@@ -13,5 +13,5 @@ func main() {
 	http.Handle("/", fs2)
 
 	log.Println("Listening on :3000...")
-	http.ListenAndServe(":3000", nil)
+	log.Fatal(http.ListenAndServe(":3000", nil))
 }
