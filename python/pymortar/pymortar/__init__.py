@@ -32,19 +32,20 @@ class Client:
 
         mortar_address: address + port to connect to, e.g. "localhost:9001".
                         Defaults to $MORTAR_API_ADDRESS from the environment.
-        mortar_cert: relative file path to the mortardata api server certificate. If this is not
-                     specified, then it defaults to an insecure connection (not recommended).
-                     Defaults to MORTAR_API_CERT
-        username: your Mortar API username. Defaults to MORTAR_API_USERNAME
-        password: your Mortar API password. Defaults to MORTAR_API_PASSWORD
+                        Currently expects a TLS-secured endpoint
+        username: your Mortar API username. Defaults to MORTAR_API_USERNAME env var
+        password: your Mortar API password. Defaults to MORTAR_API_PASSWORD env var
 
     Returns
     -------
     client: Client
         An instance of the Mortar Client.
     """
-    def __init__(self, cfg):
-        self._cfg = cfg
+    def __init__(self, cfg=None):
+        if cfg is not None:
+            self._cfg = cfg
+        else:
+            self._cfg = {}
 
         # get username/password from environment or config file
         if 'username' not in self._cfg or not self._cfg['username']:
