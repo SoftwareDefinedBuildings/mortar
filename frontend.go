@@ -26,6 +26,7 @@ type ApiFrontendBasicStage struct {
 	ctx    context.Context
 	output chan Context
 	auth   *CognitoAuth
+	sem    chan struct{}
 	sync.Mutex
 }
 
@@ -42,6 +43,10 @@ func NewApiFrontendBasicStage(cfg *ApiFrontendBasicStageConfig) (*ApiFrontendBas
 	stage := &ApiFrontendBasicStage{
 		output: make(chan Context),
 		ctx:    cfg.StageContext,
+		sem:    make(chan struct{}, 20),
+	}
+	for i := 0; i < 20; i++ {
+		stage.sem <- struct{}{}
 	}
 
 	auth, err := NewCognitoAuth(cfg.AuthConfig)
@@ -177,9 +182,14 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 
 	fetchQueriesProcessed.Inc()
 
+	sem := <-stage.sem
+	defer func() { stage.sem <- sem }()
+
 	responseChan := make(chan *mortarpb.FetchResponse)
+	ctx, cancel := context.WithTimeout(client.Context(), 1*time.Minute)
+	defer cancel()
 	queryCtx := Context{
-		ctx:     client.Context(),
+		ctx:     ctx,
 		request: *request,
 		done:    responseChan,
 	}
