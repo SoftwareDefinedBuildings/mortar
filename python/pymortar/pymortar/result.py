@@ -49,6 +49,23 @@ class Result:
         ]
         return "<pymortar.result.Result: {0}>".format(" ".join(values))
 
+    def describe_table(self, tablename):
+        """
+        Prints out a description of the table with the provided name
+
+        Parameters
+        ----------
+        tablename: string
+            Table name. This will be from the pymortar.Stream object 'name' field. List can be retrieved using Result.tables()
+
+        Returns
+        -------
+        n/a (prints out result)
+        """
+        s = "Columns: {0}".format(' '.join(self._tables.get(tablename, [])))
+        s += "\nCount: {0}".format(self.query("SELECT COUNT(*) FROM {0}".format(tablename))[0][0])
+        print(s)
+
     def add(self, resp):
         """
         Adds the next FetchResponse object from the streaming call into
@@ -106,10 +123,31 @@ class Result:
 
     @property
     def tables(self):
+        """
+        Returns a list of the table names, containing the retrieved metadata
+
+        Returns
+        -------
+        l: list of string
+            Each string is a table name
+        """
         return list(self._tables.keys())
 
     def vars(self, table):
-        return self._tables[table]
+        """
+        Returns a lsit of the column names for the given table
+
+        Parameters
+        ----------
+        tablename: string
+            Name of the table
+
+        Returns
+        -------
+        l: list of string
+            Column names of the table
+        """
+        return self._tables.get(table, [])
 
     def query(self, q):
         c = self.conn.cursor()

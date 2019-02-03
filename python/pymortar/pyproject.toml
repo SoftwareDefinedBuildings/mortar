@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pymortar"
-version = "0.2.7"
+version = "0.2.8a0"
 description = "Python tool for Mortar testbed"
 authors = ["Gabe Fierro <gtfierro@cs.berkeley.edu>"]
 
