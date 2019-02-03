@@ -1,5 +1,5 @@
 APP?=mortar
-RELEASE?=0.0.11
+RELEASE?=0.0.12-alpha0
 MORTAR_REPOSITORY?=https://github.com/SoftwareDefinedBuildings/mortar-analytics
 .PHONY: proto frontend
 
@@ -45,6 +45,9 @@ push: container client-container
 	docker push mortar/pymortar-client:$(RELEASE)
 	docker push mortar/pymortar-client:latest
 	docker push mortar/frontend:latest
+
+push-mortar: container
+	docker push mortar/$(APP):$(RELEASE)
 
 build:
 	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go build -o mortar
