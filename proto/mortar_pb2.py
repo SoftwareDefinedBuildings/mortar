@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='mortar',
   syntax='proto3',
   serialized_options=_b('Z\010mortarpb'),
-  serialized_pb=_b('\n\x0cmortar.proto\x12\x06mortar\"L\n\x10GetAPIKeyRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x14\n\x0crefreshtoken\x18\x03 \x01(\t\"5\n\x0e\x41PIKeyResponse\x12\r\n\x05token\x18\x01 \x01(\t\x12\x14\n\x0crefreshtoken\x18\x02 \x01(\t\"4\n\x0eQualifyRequest\x12\x10\n\x08required\x18\x01 \x03(\t\x12\x10\n\x08optional\x18\x02 \x03(\t\"/\n\x0fQualifyResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\r\n\x05sites\x18\x02 \x03(\t\"`\n\x0c\x46\x65tchRequest\x12\r\n\x05sites\x18\x01 \x03(\t\x12\x1f\n\x07streams\x18\x02 \x03(\x0b\x32\x0e.mortar.Stream\x12 \n\x04time\x18\x03 \x01(\x0b\x32\x12.mortar.TimeParams\"\x80\x01\n\x06Stream\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x12\n\ndefinition\x18\x02 \x01(\t\x12\x10\n\x08\x64\x61taVars\x18\x06 \x03(\t\x12\r\n\x05uuids\x18\x03 \x03(\t\x12$\n\x0b\x61ggregation\x18\x04 \x01(\x0e\x32\x0f.mortar.AggFunc\x12\r\n\x05units\x18\x05 \x01(\t\"\x9f\x01\n\rFetchResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0c\n\x04site\x18\x02 \x01(\t\x12\x10\n\x08variable\x18\x03 \x01(\t\x12\x12\n\nidentifier\x18\x04 \x01(\t\x12\r\n\x05times\x18\x05 \x03(\x03\x12\x0e\n\x06values\x18\x06 \x03(\x01\x12\x11\n\tvariables\x18\x07 \x03(\t\x12\x19\n\x04rows\x18\x08 \x03(\x0b\x32\x0b.mortar.Row\"\"\n\x03Row\x12\x1b\n\x06values\x18\x01 \x03(\x0b\x32\x0b.mortar.URI\"\'\n\x03URI\x12\x11\n\tnamespace\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"I\n\nTimeParams\x12\r\n\x05start\x18\x01 \x01(\t\x12\x0b\n\x03\x65nd\x18\x02 \x01(\t\x12\x0e\n\x06window\x18\x03 \x01(\t\x12\x0f\n\x07\x61ligned\x18\x04 \x01(\x08*\x8e\x01\n\x07\x41ggFunc\x12\x14\n\x10\x41GG_FUNC_INVALID\x10\x00\x12\x10\n\x0c\x41GG_FUNC_RAW\x10\x01\x12\x11\n\rAGG_FUNC_MEAN\x10\x02\x12\x10\n\x0c\x41GG_FUNC_MIN\x10\x03\x12\x10\n\x0c\x41GG_FUNC_MAX\x10\x04\x12\x12\n\x0e\x41GG_FUNC_COUNT\x10\x05\x12\x10\n\x0c\x41GG_FUNC_SUM\x10\x06\x32\xbb\x01\n\x06Mortar\x12=\n\tGetAPIKey\x12\x18.mortar.GetAPIKeyRequest\x1a\x16.mortar.APIKeyResponse\x12:\n\x07Qualify\x12\x16.mortar.QualifyRequest\x1a\x17.mortar.QualifyResponse\x12\x36\n\x05\x46\x65tch\x12\x14.mortar.FetchRequest\x1a\x15.mortar.FetchResponse0\x01\x42\nZ\x08mortarpbb\x06proto3')
+  serialized_pb=_b('\n\x0cmortar.proto\x12\x06mortar\"L\n\x10GetAPIKeyRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x14\n\x0crefreshtoken\x18\x03 \x01(\t\"5\n\x0e\x41PIKeyResponse\x12\r\n\x05token\x18\x01 \x01(\t\x12\x14\n\x0crefreshtoken\x18\x02 \x01(\t\"4\n\x0eQualifyRequest\x12\x10\n\x08required\x18\x01 \x03(\t\x12\x10\n\x08optional\x18\x02 \x03(\t\"/\n\x0fQualifyResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\r\n\x05sites\x18\x02 \x03(\t\"\xb0\x01\n\x0c\x46\x65tchRequest\x12\r\n\x05sites\x18\x01 \x03(\t\x12\x1f\n\x07streams\x18\x02 \x03(\x0b\x32\x0e.mortar.Stream\x12 \n\x04time\x18\x03 \x01(\x0b\x32\x12.mortar.TimeParams\x12\'\n\x0b\x63ollections\x18\x04 \x03(\x0b\x32\x12.mortar.Collection\x12%\n\nselections\x18\x05 \x03(\x0b\x32\x11.mortar.Selection\"\x80\x01\n\x06Stream\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x12\n\ndefinition\x18\x02 \x01(\t\x12\x10\n\x08\x64\x61taVars\x18\x06 \x03(\t\x12\r\n\x05uuids\x18\x03 \x03(\t\x12$\n\x0b\x61ggregation\x18\x04 \x01(\x0e\x32\x0f.mortar.AggFunc\x12\r\n\x05units\x18\x05 \x01(\t\"\xc6\x01\n\rFetchResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0c\n\x04site\x18\x02 \x01(\t\x12\x12\n\ncollection\x18\t \x01(\t\x12\x11\n\tselection\x18\n \x01(\t\x12\x10\n\x08variable\x18\x03 \x01(\t\x12\x12\n\nidentifier\x18\x04 \x01(\t\x12\r\n\x05times\x18\x05 \x03(\x03\x12\x0e\n\x06values\x18\x06 \x03(\x01\x12\x11\n\tvariables\x18\x07 \x03(\t\x12\x19\n\x04rows\x18\x08 \x03(\x0b\x32\x0b.mortar.Row\"\"\n\x03Row\x12\x1b\n\x06values\x18\x01 \x03(\x0b\x32\x0b.mortar.URI\"\'\n\x03URI\x12\x11\n\tnamespace\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"I\n\nTimeParams\x12\r\n\x05start\x18\x01 \x01(\t\x12\x0b\n\x03\x65nd\x18\x02 \x01(\t\x12\x0e\n\x06window\x18\x03 \x01(\t\x12\x0f\n\x07\x61ligned\x18\x04 \x01(\x08\"L\n\nCollection\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05sites\x18\x02 \x03(\t\x12\x12\n\ndefinition\x18\x03 \x01(\t\x12\r\n\x05uuids\x18\x04 \x03(\t\"\x85\x01\n\tSelection\x12\x0c\n\x04name\x18\x01 \x01(\t\x12$\n\x0b\x61ggregation\x18\x02 \x01(\x0e\x32\x0f.mortar.AggFunc\x12\x0e\n\x06window\x18\x03 \x01(\t\x12\x0c\n\x04unit\x18\x04 \x01(\t\x12&\n\ntimeseries\x18\x05 \x03(\x0b\x32\x12.mortar.Timeseries\"2\n\nTimeseries\x12\x12\n\ncollection\x18\x01 \x01(\t\x12\x10\n\x08\x64\x61taVars\x18\x02 \x03(\t*\x8e\x01\n\x07\x41ggFunc\x12\x14\n\x10\x41GG_FUNC_INVALID\x10\x00\x12\x10\n\x0c\x41GG_FUNC_RAW\x10\x01\x12\x11\n\rAGG_FUNC_MEAN\x10\x02\x12\x10\n\x0c\x41GG_FUNC_MIN\x10\x03\x12\x10\n\x0c\x41GG_FUNC_MAX\x10\x04\x12\x12\n\x0e\x41GG_FUNC_COUNT\x10\x05\x12\x10\n\x0c\x41GG_FUNC_SUM\x10\x06\x32\xbb\x01\n\x06Mortar\x12=\n\tGetAPIKey\x12\x18.mortar.GetAPIKeyRequest\x1a\x16.mortar.APIKeyResponse\x12:\n\x07Qualify\x12\x16.mortar.QualifyRequest\x1a\x17.mortar.QualifyResponse\x12\x36\n\x05\x46\x65tch\x12\x14.mortar.FetchRequest\x1a\x15.mortar.FetchResponse0\x01\x42\nZ\x08mortarpbb\x06proto3')
 )
 
 _AGGFUNC = _descriptor.EnumDescriptor(
@@ -60,8 +60,8 @@ _AGGFUNC = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=804,
-  serialized_end=946,
+  serialized_start=1190,
+  serialized_end=1332,
 )
 _sym_db.RegisterEnumDescriptor(_AGGFUNC)
 
@@ -263,6 +263,20 @@ _FETCHREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='collections', full_name='mortar.FetchRequest.collections', index=3,
+      number=4, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='selections', full_name='mortar.FetchRequest.selections', index=4,
+      number=5, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -275,8 +289,8 @@ _FETCHREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=260,
-  serialized_end=356,
+  serialized_start=261,
+  serialized_end=437,
 )
 
 
@@ -341,8 +355,8 @@ _STREAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=359,
-  serialized_end=487,
+  serialized_start=440,
+  serialized_end=568,
 )
 
 
@@ -368,42 +382,56 @@ _FETCHRESPONSE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='variable', full_name='mortar.FetchResponse.variable', index=2,
+      name='collection', full_name='mortar.FetchResponse.collection', index=2,
+      number=9, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='selection', full_name='mortar.FetchResponse.selection', index=3,
+      number=10, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='variable', full_name='mortar.FetchResponse.variable', index=4,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='identifier', full_name='mortar.FetchResponse.identifier', index=3,
+      name='identifier', full_name='mortar.FetchResponse.identifier', index=5,
       number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='times', full_name='mortar.FetchResponse.times', index=4,
+      name='times', full_name='mortar.FetchResponse.times', index=6,
       number=5, type=3, cpp_type=2, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='values', full_name='mortar.FetchResponse.values', index=5,
+      name='values', full_name='mortar.FetchResponse.values', index=7,
       number=6, type=1, cpp_type=5, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='variables', full_name='mortar.FetchResponse.variables', index=6,
+      name='variables', full_name='mortar.FetchResponse.variables', index=8,
       number=7, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='rows', full_name='mortar.FetchResponse.rows', index=7,
+      name='rows', full_name='mortar.FetchResponse.rows', index=9,
       number=8, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -421,8 +449,8 @@ _FETCHRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=490,
-  serialized_end=649,
+  serialized_start=571,
+  serialized_end=769,
 )
 
 
@@ -452,8 +480,8 @@ _ROW = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=651,
-  serialized_end=685,
+  serialized_start=771,
+  serialized_end=805,
 )
 
 
@@ -490,8 +518,8 @@ _URI = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=687,
-  serialized_end=726,
+  serialized_start=807,
+  serialized_end=846,
 )
 
 
@@ -542,15 +570,168 @@ _TIMEPARAMS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=728,
-  serialized_end=801,
+  serialized_start=848,
+  serialized_end=921,
+)
+
+
+_COLLECTION = _descriptor.Descriptor(
+  name='Collection',
+  full_name='mortar.Collection',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='mortar.Collection.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='sites', full_name='mortar.Collection.sites', index=1,
+      number=2, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='definition', full_name='mortar.Collection.definition', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='uuids', full_name='mortar.Collection.uuids', index=3,
+      number=4, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=923,
+  serialized_end=999,
+)
+
+
+_SELECTION = _descriptor.Descriptor(
+  name='Selection',
+  full_name='mortar.Selection',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='mortar.Selection.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='aggregation', full_name='mortar.Selection.aggregation', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='window', full_name='mortar.Selection.window', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='unit', full_name='mortar.Selection.unit', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='timeseries', full_name='mortar.Selection.timeseries', index=4,
+      number=5, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1002,
+  serialized_end=1135,
+)
+
+
+_TIMESERIES = _descriptor.Descriptor(
+  name='Timeseries',
+  full_name='mortar.Timeseries',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='collection', full_name='mortar.Timeseries.collection', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='dataVars', full_name='mortar.Timeseries.dataVars', index=1,
+      number=2, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1137,
+  serialized_end=1187,
 )
 
 _FETCHREQUEST.fields_by_name['streams'].message_type = _STREAM
 _FETCHREQUEST.fields_by_name['time'].message_type = _TIMEPARAMS
+_FETCHREQUEST.fields_by_name['collections'].message_type = _COLLECTION
+_FETCHREQUEST.fields_by_name['selections'].message_type = _SELECTION
 _STREAM.fields_by_name['aggregation'].enum_type = _AGGFUNC
 _FETCHRESPONSE.fields_by_name['rows'].message_type = _ROW
 _ROW.fields_by_name['values'].message_type = _URI
+_SELECTION.fields_by_name['aggregation'].enum_type = _AGGFUNC
+_SELECTION.fields_by_name['timeseries'].message_type = _TIMESERIES
 DESCRIPTOR.message_types_by_name['GetAPIKeyRequest'] = _GETAPIKEYREQUEST
 DESCRIPTOR.message_types_by_name['APIKeyResponse'] = _APIKEYRESPONSE
 DESCRIPTOR.message_types_by_name['QualifyRequest'] = _QUALIFYREQUEST
@@ -561,6 +742,9 @@ DESCRIPTOR.message_types_by_name['FetchResponse'] = _FETCHRESPONSE
 DESCRIPTOR.message_types_by_name['Row'] = _ROW
 DESCRIPTOR.message_types_by_name['URI'] = _URI
 DESCRIPTOR.message_types_by_name['TimeParams'] = _TIMEPARAMS
+DESCRIPTOR.message_types_by_name['Collection'] = _COLLECTION
+DESCRIPTOR.message_types_by_name['Selection'] = _SELECTION
+DESCRIPTOR.message_types_by_name['Timeseries'] = _TIMESERIES
 DESCRIPTOR.enum_types_by_name['AggFunc'] = _AGGFUNC
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -634,6 +818,27 @@ TimeParams = _reflection.GeneratedProtocolMessageType('TimeParams', (_message.Me
   ))
 _sym_db.RegisterMessage(TimeParams)
 
+Collection = _reflection.GeneratedProtocolMessageType('Collection', (_message.Message,), dict(
+  DESCRIPTOR = _COLLECTION,
+  __module__ = 'mortar_pb2'
+  # @@protoc_insertion_point(class_scope:mortar.Collection)
+  ))
+_sym_db.RegisterMessage(Collection)
+
+Selection = _reflection.GeneratedProtocolMessageType('Selection', (_message.Message,), dict(
+  DESCRIPTOR = _SELECTION,
+  __module__ = 'mortar_pb2'
+  # @@protoc_insertion_point(class_scope:mortar.Selection)
+  ))
+_sym_db.RegisterMessage(Selection)
+
+Timeseries = _reflection.GeneratedProtocolMessageType('Timeseries', (_message.Message,), dict(
+  DESCRIPTOR = _TIMESERIES,
+  __module__ = 'mortar_pb2'
+  # @@protoc_insertion_point(class_scope:mortar.Timeseries)
+  ))
+_sym_db.RegisterMessage(Timeseries)
+
 
 DESCRIPTOR._options = None
 
@@ -643,8 +848,8 @@ _MORTAR = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=949,
-  serialized_end=1136,
+  serialized_start=1335,
+  serialized_end=1522,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetAPIKey',

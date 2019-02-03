@@ -45,6 +45,9 @@ message FetchRequest {
     // temporal parameters for all streams
     // (range of data to download, resolution)
     TimeParams time = 3;
+
+    repeated Collection collections = 4;
+    repeated Selection selections = 5;
 }
 
 message Stream {
@@ -68,10 +71,16 @@ message FetchResponse {
     string error = 1;
     // stream definition fields:
     // - site name
-    // - variable name (from Stream definition)
+    // - collection name
+    // - selection name
+    // - variable name (from Collection definition)
     string site = 2;
+    string collection = 9;
+    string selection = 10;
     string variable = 3;
+    // uuid
     string identifier = 4;
+
     // timestamps and value should have same length
     repeated int64 times = 5;
     repeated double values = 6;
@@ -113,3 +122,36 @@ enum AggFunc {
     AGG_FUNC_SUM = 6;
 }
 
+
+message Collection {
+    // name of the collection
+    string name = 1;
+    // sites included in this collection
+    repeated string sites = 2;
+    // brick query definition
+    string definition = 3;
+    // uuids instead of brick query
+    repeated string uuids = 4;
+}
+
+message Selection {
+    // name of the streams
+    string name = 1;
+
+    // aggregation function
+    AggFunc aggregation = 2;
+    // window argument for aggregation
+    string window = 3;
+    // engineering units
+    string unit = 4;
+
+    repeated Timeseries timeseries = 5;
+}
+
+message Timeseries {
+    // name of the Collection
+    string collection = 1;
+    // list of variables from the collection that
+    // we want to get data for
+    repeated string dataVars = 2;
+}
