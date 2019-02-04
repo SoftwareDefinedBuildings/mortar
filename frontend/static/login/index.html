@@ -1,0 +1,13 @@
+<html>
+    <head>
+    </head>
+    <body id="content">
+    </body>
+    <script>
+    if (window.location.search.substr(0,6) === "?code=") {
+        document.getElementById("content").innerHTML = "<h3>Login/Signup Successful</h3>"
+    } else {
+        document.getElementById("content").innerHTML = "<h3><a href='https://mortardata.org/'>https://mortardata.org/</a> to login or sign up</h3>"
+    }
+    </script>
+</html>
