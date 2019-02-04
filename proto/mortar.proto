@@ -130,8 +130,6 @@ message Collection {
     repeated string sites = 2;
     // brick query definition
     string definition = 3;
-    // uuids instead of brick query
-    repeated string uuids = 4;
 }
 
 message Selection {
@@ -145,7 +143,10 @@ message Selection {
     // engineering units
     string unit = 4;
 
+    // refer to variables in collections
     repeated Timeseries timeseries = 5;
+    // instead of vars in collections, list the UUIDs explicitly.
+    repeated string uuids = 6;
 }
 
 message Timeseries {
