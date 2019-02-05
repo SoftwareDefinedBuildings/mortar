@@ -183,6 +183,97 @@ func (stage *BrickQueryStage) processQualify(ctx Context) error {
 	return nil
 }
 
+// We need to rethink how the Brick stage handles the collection + selection processing
+
+func (stage *BrickQueryStage) processQuery2(ctx Context) error {
+	// store collection name -> list of dataVars
+	var collectionDataVars = make(map[string][]string)
+	// store collection name -> list of indexes to dependent selections
+	var collectionSelections = make(map[string][]int)
+	for idx, selection := range ctx.request.Selections {
+
+	tsLoop:
+		for _, timeseries := range selection.Timeseries {
+			collectionDataVars[timeseries.Collection] = append(collectionDataVars[timeseries.Collection], timeseries.DataVars...)
+
+			// add the index of the selection to the list associated with the collection if it doesn't already exist in the list
+			for _, selIdx := range collectionSelections[timeseries.Collection] {
+				if selIdx == idx {
+					continue tsLoop
+				}
+			}
+			collectionSelections[timeseries.Collection] = append(collectionSelections[timeseries.Collection], idx)
+
+		}
+	}
+
+	for _, collection := range ctx.request.Collections {
+		query, err := stage.db.ParseQuery(collection.Definition, stage.highwatermark)
+		if err != nil {
+			ctx.addError(err)
+			return err
+		}
+
+		// this rewrites the incoming query so that it extracts the UUIDs (bf:uuid property) for each of the
+		// variables in the SELECT clause of the query. This removes the need for the user to know that the bf:uuid
+		// property is how to relate the points to the timeseries database. However, it also introduces the complexity
+		// of dealing with whether or not the variables *do* have associated timeseries or not.
+		mapping, _ := rewriteQuery(collectionDataVars[collection.Name], query)
+		for _, sitename := range ctx.request.Sites {
+			query.Graphs = []string{sitename}
+			res, err := stage.db.Select(ctx.ctx, query)
+			if err != nil {
+				ctx.addError(err)
+				//return err
+			}
+
+			// collate the UUIDs from query results and push into context.
+			// Because the rewritten query puts all of the new variables corresponding to the possible UUIDs at the end,
+			// the rewriteQuery method has to return the index that we start with when iterating through the variables in
+			// each row to make sure we get the actual queries.
+			//stream := ctx.request.Streams[idx]
+
+			// need to associate the results of the query with this collection:
+			// - site name
+			// - collection name
+			// - variables involved in the query
+			brickresp := &mortarpb.FetchResponse{}
+			brickresp.Site = sitename
+			brickresp.Collection = collection.Name
+			brickresp.Variables = res.Variables
+
+			for _, row := range res.Rows {
+				//	// for each dependent selection
+				for _, selIdx := range collectionSelections[collection.Name] {
+					// for each timeseries
+					selection := ctx.request.Selections[selIdx]
+					// add uuids to the list on the Selection for each datavar from the collection we're currently working with
+					for _, ts := range selection.Timeseries {
+						if ts.Collection == collection.Name {
+							for _, dataVar := range ts.DataVars {
+								uuidx := mapping[dataVar]
+								selection.Uuids = append(selection.Uuids, row.Values[uuidx].Value)
+							}
+						}
+					}
+					// TODO: do we need to update the selection?
+					//ctx.request.Selections[selIdx] = selection
+				}
+				//}
+				// we also add the query results to the output
+				brickresp.Rows = append(brickresp.Rows, transformRow(row))
+			}
+
+			// send the query results to the client
+			ctx.done <- brickresp
+		}
+
+	}
+	// signal that we are done processing this stage (1x)
+	stage.output <- ctx
+	return nil
+}
+
 func (stage *BrickQueryStage) processQuery(ctx Context) error {
 	for idx, reqstream := range ctx.request.Streams {
 		query, err := stage.db.ParseQuery(reqstream.Definition, stage.highwatermark)
@@ -190,11 +281,12 @@ func (stage *BrickQueryStage) processQuery(ctx Context) error {
 			ctx.addError(err)
 			return err
 		}
+
 		// this rewrites the incoming query so that it extracts the UUIDs (bf:uuid property) for each of the
 		// variables in the SELECT clause of the query. This removes the need for the user to know that the bf:uuid
 		// property is how to relate the points to the timeseries database. However, it also introduces the complexity
 		// of dealing with whether or not the variables *do* have associated timeseries or not.
-		startIdx := rewriteQuery(reqstream.DataVars, query)
+		_, startIdx := rewriteQuery(reqstream.DataVars, query)
 		for _, sitename := range ctx.request.Sites {
 			query.Graphs = []string{sitename}
 			res, err := stage.db.Select(ctx.ctx, query)
@@ -234,9 +326,12 @@ func (stage *BrickQueryStage) processQuery(ctx Context) error {
 	return nil
 }
 
-func rewriteQuery(datavars []string, query *logpb.SelectQuery) int {
+// startIdx gives the index into the row where the UUIDs start
+// mapping stores variable name -> index where the UUID is in the rewritten query
+func rewriteQuery(datavars []string, query *logpb.SelectQuery) (mapping map[string]int, startIdx int) {
 	var newtriples []*logpb.Triple
 	var newselect []string
+	mapping = make(map[string]int)
 	uuidPred := logpb.URI{Namespace: "https://brickschema.org/schema/1.0.3/BrickFrame", Value: "uuid"}
 
 	for _, varname := range datavars {
@@ -244,12 +339,13 @@ func rewriteQuery(datavars []string, query *logpb.SelectQuery) int {
 		basevarname_uuid := "?" + basevarname + "_uuid"
 		newtriples = append(newtriples, &logpb.Triple{Subject: &logpb.URI{Value: varname}, Predicate: []*logpb.URI{&uuidPred}, Object: &logpb.URI{Value: basevarname_uuid}})
 		newselect = append(newselect, basevarname_uuid)
+		mapping[varname] = len(newselect)
 	}
 
 	oldidx := len(query.Vars)
 	query.Where = append(query.Where, newtriples...)
 	query.Vars = append(query.Vars, newselect...)
-	return oldidx
+	return mapping, oldidx
 }
 
 func transformRow(r *logpb.Row) *mortarpb.Row {
