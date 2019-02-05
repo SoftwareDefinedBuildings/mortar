@@ -3,7 +3,7 @@ from pymortar import mortar_pb2
 from pymortar import mortar_pb2_grpc
 from pymortar.result import Result
 
-from pymortar.mortar_pb2 import GetAPIKeyRequest, FetchRequest, QualifyRequest, Stream, TimeParams
+from pymortar.mortar_pb2 import GetAPIKeyRequest, FetchRequest, QualifyRequest, Stream, TimeParams, Timeseries, Collection, Selection
 
 from pymortar.mortar_pb2 import AGG_FUNC_RAW  as RAW
 from pymortar.mortar_pb2 import AGG_FUNC_MEAN as MEAN
@@ -59,10 +59,16 @@ class Client:
             self._mortar_address = self._cfg.get('mortar_address')
 
         # setup GRPC client: gzip + tls
-        credentials = grpc.ssl_channel_credentials()
-        self._channel = grpc.secure_channel(self._mortar_address, credentials, options=[
-	    ('grpc.default_compression_algorithm', 2) # 2 is GZIP
-	])
+        if self._cfg.get('abandon_all_tls') == "yes i'm sure":
+            print('insecure')
+            self._channel = grpc.insecure_channel(self._mortar_address, options=[
+	        ('grpc.default_compression_algorithm', 2) # 2 is GZIP
+	    ])
+        else:
+            credentials = grpc.ssl_channel_credentials()
+            self._channel = grpc.secure_channel(self._mortar_address, credentials, options=[
+	        ('grpc.default_compression_algorithm', 2) # 2 is GZIP
+	    ])
 
         self._client = mortar_pb2_grpc.MortarStub(self._channel)
 
@@ -71,7 +77,7 @@ class Client:
 
         if os.path.exists(".pymortartoken.json"):
             self._token = json.load(open(".pymortartoken.json", "r"))
-            print("loaded token: {0}".format(self._token))
+            #print("loaded token: {0}".format(self._token))
         else:
             self._token = None
 
@@ -82,7 +88,7 @@ class Client:
 
     def _refresh(self):
         response = self._client.GetAPIKey(mortar_pb2.GetAPIKeyRequest(username=self._cfg["username"],password=self._cfg["password"]))
-        print(response)
+        #print(response)
         self._token = response.token
         json.dump(self._token, open(".pymortartoken.json", "w"))
 
@@ -127,7 +133,8 @@ class Client:
             if x.error != "":
                 logging.error(x.error)
                 break
-            res.add(x)
+            #res.add(x)
+            res.add2(x)
         res.build()
         return res
 

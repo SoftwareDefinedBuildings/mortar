@@ -35,16 +35,20 @@ class Result:
         # result object has its own sqlite3 in-memory database
         self.conn = sqlite3.connect(':memory:')
         self._series = {}
+        self._selections = {}
         self._df = None
+        self._dfs = {}
         self._tables = {}
 
     def __repr__(self):
         numtables = len(self._tables) if self._tables else "n/a"
-        numcols = len(self._df.columns) if self._df is not None else "n/a"
-        numvals = len(self._df) if self._df is not None else "n/a"
+        selections = self._selections.values()
+        numcols = sum(map(lambda x: len(x.columns), self._dfs.values()))
+        numvals = sum(map(lambda x: x.size, self._dfs.values()))
         values = [
-            "tables:{0}".format(numtables),
-            "cols:{0}".format(numcols),
+            "collections:{0}".format(numtables),
+            "selections:{0}".format(len(selections)),
+            "timeseries:{0}".format(numcols),
             "vals:{0}".format(numvals)
         ]
         return "<pymortar.result.Result: {0}>".format(" ".join(values))
@@ -65,6 +69,38 @@ class Result:
         s = "Columns: {0}".format(' '.join(self._tables.get(tablename, [])))
         s += "\nCount: {0}".format(self.query("SELECT COUNT(*) FROM {0}".format(tablename))[0][0])
         print(s)
+
+    def add2(self, resp):
+        """
+        Adds the next FetchResponse object from the streaming call into
+        the current Result object
+
+        Parameters
+        ----------
+        resp: FetchResponse
+            This parameter is a FetchResponse object obtained from
+            calling the Mortar Fetch() call.
+        """
+        if resp.collection not in self._tables and len(resp.variables) > 0:
+            make_table(self.conn, resp.collection, resp.variables)
+            self._tables[resp.collection] = list(map(lambda x: x.lstrip("?"), resp.variables))
+            self._tables[resp.collection].append("site")
+        if resp.collection in self._tables:
+            c = self.conn.cursor()
+            for row in resp.rows:
+                values = ['"{0}"'.format(format_uri(u)) for u in row.values]
+                values.append('"{0}"'.format(resp.site))
+                c.execute("INSERT INTO {0} values ({1})".format(resp.collection, ", ".join(values)))
+
+        if resp.identifier and resp.selection:
+            if resp.selection not in self._selections:
+                self._selections[resp.selection] = {}
+            if resp.identifier not in self._selections[resp.selection]:
+                self._selections[resp.selection][resp.identifier] = []
+            self._selections[resp.selection][resp.identifier].append(
+                pd.Series(resp.values, index=pd.to_datetime(resp.times), name=resp.identifier)
+            )
+
 
     def add(self, resp):
         """
@@ -103,23 +139,35 @@ class Result:
             )
 
     def build(self):
-        if len(self._series) == 0:
+        if len(self._selections) == 0:
             self._df = pd.DataFrame()
             return
         t = time.time()
-        for uuidname, contents in self._series.items():
-            ser = pd.concat(contents)
-            ser = ser[~ser.index.duplicated()]
-            self._series[uuidname] = ser
-        self._df = pd.concat(self._series.values(), axis=1, copy=False)
+        for selection, timeseries in self._selections.items():
+            timeseries = self._selections[selection]
+            for uuidname, contents in timeseries.items():
+                ser = pd.concat(contents)
+                ser = ser[~ser.index.duplicated()]
+                self._selections[selection][uuidname] = ser
+            self._dfs[selection] = pd.concat(self._selections[selection].values(), axis=1, copy=False)
         t2 = time.time()
         print("Building DF took {0}".format(t2-t))
 
-    @property
-    def df(self):
-        if self._df is None:
+    def __getitem__(self, key):
+        if key not in self._selections:
+            return None
+        if key not in self._dfs:
             self.build()
-        return self._df
+        return self._dfs[key]
+
+    def __contains__(self, key):
+        return key in self._selections
+
+    def get(self, key, default=None):
+        if key not in self._selections:
+            return default
+        return self[key]
+
 
     @property
     def tables(self):
