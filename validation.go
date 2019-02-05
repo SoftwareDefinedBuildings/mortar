@@ -13,10 +13,11 @@ func validateFetchRequest(req *mortarpb.FetchRequest) error {
 		return errors.New("Need to include non-empty request.Sites")
 	}
 
-	// check that there are non-zero number of streams
-	if len(req.Streams) == 0 {
-		return errors.New("Need to include non-empty request.Streams")
-	}
+	//TODO: add collection + selection tests
+	//// check that there are non-zero number of streams
+	//if len(req.Streams) == 0 {
+	//	return errors.New("Need to include non-empty request.Streams")
+	//}
 
 	hasWindowAgg := false
 	for idx, stream := range req.Streams {

@@ -260,6 +260,115 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 	return nil
 }
 
+func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
+	//	defer ctx.finish()
+	// parse timestamps for the query
+	start_time, err := time.Parse(time.RFC3339, ctx.request.Time.Start)
+	if err != nil {
+		err = errors.Wrapf(err, "Could not parse Start time (%s)", ctx.request.Time.Start)
+		ctx.addError(err)
+		return err
+	}
+	end_time, err := time.Parse(time.RFC3339, ctx.request.Time.End)
+	if err != nil {
+		err = errors.Wrapf(err, "Could not parse End time (%s)", ctx.request.Time.End)
+		ctx.addError(err)
+		return err
+	}
+
+	//ctx.request.TimeParams.window
+	//qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
+
+	// loop over all streams, and then over all UUIDs
+	for _, selection := range ctx.request.Selections {
+		for _, uuStr := range selection.Uuids {
+			uu := uuid.Parse(uuStr)
+			stream, err := stage.getStream(ctx.ctx, uu)
+			if err != nil {
+				ctx.addError(err)
+				return err
+			}
+
+			// handle RAW streams
+			if selection.Aggregation == mortarpb.AggFunc_AGG_FUNC_RAW {
+				// if raw data...
+				rawpoints, generations, errchan := stream.RawValues(ctx.ctx, start_time.UnixNano(), end_time.UnixNano(), 0)
+				resp := &mortarpb.FetchResponse{}
+				var pcount = 0
+				for p := range rawpoints {
+					pcount += 1
+					resp.Times = append(resp.Times, p.Time)
+					resp.Values = append(resp.Values, p.Value)
+					if pcount == TS_BATCH_SIZE {
+						resp.Selection = selection.Name
+						resp.Identifier = uuStr
+						ctx.response = resp
+						stage.output <- ctx
+						resp = &mortarpb.FetchResponse{}
+						pcount = 0
+					}
+				}
+				if len(resp.Times) > 0 {
+					resp.Selection = selection.Name
+					resp.Identifier = uuStr
+					ctx.response = resp
+					stage.output <- ctx
+				}
+
+				<-generations
+				if err := <-errchan; err != nil {
+					ctx.addError(err)
+					return err
+				}
+			} else {
+				windowSize, err := ParseDuration(ctx.request.Time.Window)
+				if err != nil {
+					ctx.addError(err)
+					return err
+				}
+				windowDepth := math.Log2(float64(windowSize))
+				suggestedAccuracy := uint8(math.Max(windowDepth-5, 30))
+
+				statpoints, generations, errchan := stream.Windows(ctx.ctx, start_time.UnixNano(), end_time.UnixNano(), uint64(windowSize.Nanoseconds()), suggestedAccuracy, 0)
+
+				resp := &mortarpb.FetchResponse{}
+				var pcount = 0
+				for p := range statpoints {
+					pcount += 1
+					resp.Times = append(resp.Times, p.Time)
+
+					resp.Values = append(resp.Values, valueFromAggFunc(p, selection.Aggregation))
+
+					if pcount == TS_BATCH_SIZE {
+						resp.Variable = selection.Name
+						resp.Identifier = uuStr
+						ctx.response = resp
+						stage.output <- ctx
+						resp = &mortarpb.FetchResponse{}
+						pcount = 0
+					}
+				}
+				if len(resp.Times) > 0 {
+					resp.Variable = selection.Name
+					resp.Identifier = uuStr
+					ctx.response = resp
+					stage.output <- ctx
+				}
+
+				<-generations
+				if err := <-errchan; err != nil {
+					ctx.addError(err)
+					return err
+				}
+
+			}
+
+		}
+	}
+
+	return nil
+}
+
 var dur_re = regexp.MustCompile(`(\d+)(\w+)`)
 
 func ParseDuration(expr string) (time.Duration, error) {
