@@ -168,6 +168,32 @@ class Result:
             return default
         return self[key]
 
+    @property
+    def collections(self):
+        """
+        Returns the list of collections in this result. Access collections as SQL
+        tables using Result.query("select * from {collection name}")
+
+        Returns
+        -------
+        l: list of str
+          collection names
+        """
+        return self.tables
+
+    @property
+    def selections(self):
+        """
+        Returns the list of selections in this result. Access selections using
+        Result['selection name'] or Result.get('selection name')
+
+        Returns
+        -------
+        l: list of str
+          selection names
+        """
+        return list(self._selections.keys())
+
 
     @property
     def tables(self):
