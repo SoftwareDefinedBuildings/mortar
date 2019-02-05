@@ -2,15 +2,15 @@ import pymortar
 client = pymortar.Client({})
 
 # client.qualify
-resp = client.qualify([
-    "SELECT ?m WHERE { ?m rdf:type/rdfs:subClassOf* brick:Electric_Meter };",
+qualify_resp = client.qualify([
+    "SELECT ?meter WHERE { ?meter rdf:type/rdfs:subClassOf* brick:Building_Electric_Meter };",
 ])
 
 req = pymortar.FetchRequest(
-    sites=resp.sites,
+    sites=qualify_resp.sites,
     collections=[
       pymortar.Collection(
-        sites=resp.sites,
+        sites=qualify_resp.sites,
         name="meter",
         definition="SELECT ?meter WHERE { ?meter rdf:type/rdfs:subClassOf* brick:Building_Electric_Meter };",
       )
@@ -34,5 +34,5 @@ req = pymortar.FetchRequest(
     )
 )
 
-b = client.fetch(req)
-print(b.df.describe())
+resp = client.fetch(req)
+print(resp)
