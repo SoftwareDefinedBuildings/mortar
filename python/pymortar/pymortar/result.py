@@ -151,7 +151,7 @@ class Result:
                 self._selections[selection][uuidname] = ser
             self._dfs[selection] = pd.concat(self._selections[selection].values(), axis=1, copy=False)
         t2 = time.time()
-        print("Building DF took {0}".format(t2-t))
+        #print("Building DF took {0}".format(t2-t))
 
     def __getitem__(self, key):
         if key not in self._selections:
