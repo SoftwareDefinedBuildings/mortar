@@ -344,7 +344,7 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 					resp.Values = append(resp.Values, valueFromAggFunc(p, selection.Aggregation))
 
 					if pcount == TS_BATCH_SIZE {
-						resp.Variable = selection.Name
+						resp.Selection = selection.Name
 						resp.Identifier = uuStr
 						ctx.response = resp
 						stage.output <- ctx
@@ -353,7 +353,7 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 					}
 				}
 				if len(resp.Times) > 0 {
-					resp.Variable = selection.Name
+					resp.Selection = selection.Name
 					resp.Identifier = uuStr
 					ctx.response = resp
 					stage.output <- ctx
