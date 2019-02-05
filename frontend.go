@@ -146,7 +146,9 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 	stage.output <- queryCtx
 	resp := <-responseChan
 	//close(responseChan)
-	log.Warning(resp.Error)
+	if resp.Error != "" {
+		log.Warning(resp.Error)
+	}
 
 	qualifyProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
 

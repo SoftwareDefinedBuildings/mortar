@@ -57,7 +57,11 @@ func NewTimeseriesQueryStage(cfg *TimeseriesStageConfig) (*TimeseriesQueryStage,
 			for {
 				select {
 				case ctx := <-input:
-					if len(ctx.request.Sites) > 0 {
+					if len(ctx.request.Sites) > 0 && len(ctx.request.Selections) > 0 {
+						if err := stage.processQuery2(ctx); err != nil {
+							log.Println(err)
+						}
+					} else if len(ctx.request.Sites) > 0 && len(ctx.request.Streams) > 0 {
 						if err := stage.processQuery(ctx); err != nil {
 							log.Println(err)
 						}
@@ -321,7 +325,7 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 					return err
 				}
 			} else {
-				windowSize, err := ParseDuration(ctx.request.Time.Window)
+				windowSize, err := ParseDuration(selection.Window)
 				if err != nil {
 					ctx.addError(err)
 					return err

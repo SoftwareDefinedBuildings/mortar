@@ -79,7 +79,16 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 			for {
 				select {
 				case ctx := <-input:
-					if len(ctx.request.Sites) > 0 {
+					// new API
+					if len(ctx.request.Sites) > 0 && len(ctx.request.Collections) > 0 {
+						if err := stage.processQuery2(ctx); err != nil {
+							log.Println(err)
+							ctx.response = nil
+							ctx.addError(err)
+							stage.output <- ctx
+						}
+						// old API
+					} else if len(ctx.request.Sites) > 0 && len(ctx.request.Streams) > 0 {
 						if err := stage.processQuery(ctx); err != nil {
 							log.Println(err)
 							ctx.response = nil
