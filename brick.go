@@ -347,8 +347,8 @@ func rewriteQuery(datavars []string, query *logpb.SelectQuery) (mapping map[stri
 		basevarname := strings.TrimPrefix(varname, "?")
 		basevarname_uuid := "?" + basevarname + "_uuid"
 		newtriples = append(newtriples, &logpb.Triple{Subject: &logpb.URI{Value: varname}, Predicate: []*logpb.URI{&uuidPred}, Object: &logpb.URI{Value: basevarname_uuid}})
+		mapping[varname] = len(query.Vars) + len(newselect)
 		newselect = append(newselect, basevarname_uuid)
-		mapping[varname] = len(newselect)
 	}
 
 	oldidx := len(query.Vars)

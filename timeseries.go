@@ -287,6 +287,9 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 	for _, selection := range ctx.request.Selections {
 		for _, uuStr := range selection.Uuids {
 			uu := uuid.Parse(uuStr)
+			if uu == nil {
+				continue
+			}
 			stream, err := stage.getStream(ctx.ctx, uu)
 			if err != nil {
 				ctx.addError(err)
