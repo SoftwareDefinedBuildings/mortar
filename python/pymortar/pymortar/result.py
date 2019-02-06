@@ -7,7 +7,7 @@ def format_uri(uri):
     if uri.namespace:
         return uri.namespace+"#"+uri.value
     else:
-        return uri.value
+        return uri.value.strip('"')
 
 def make_table(_conn, tablename, varnames):
     c = _conn.cursor()
