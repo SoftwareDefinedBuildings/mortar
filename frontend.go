@@ -110,6 +110,7 @@ func (stage *ApiFrontendBasicStage) String() string {
 func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortarpb.QualifyRequest) (*mortarpb.QualifyResponse, error) {
 
 	t := time.Now()
+	defer qualifyProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
 
 	activeQueries.Inc()
 	defer activeQueries.Dec()
@@ -135,6 +136,9 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 
 	qualifyQueriesProcessed.Inc()
 
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
 	// prepare context for the execution
 	responseChan := make(chan *mortarpb.QualifyResponse)
 	queryCtx := Context{
@@ -143,22 +147,32 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 		qualify_done:    responseChan,
 	}
 
-	stage.output <- queryCtx
-	resp := <-responseChan
-	//close(responseChan)
-	if resp.Error != "" {
-		log.Warning(resp.Error)
+	select {
+	case stage.output <- queryCtx:
+	case <-ctx.Done():
+		return nil, errors.New("timeout")
 	}
 
-	qualifyProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
+	select {
+	case resp := <-responseChan:
+		//close(responseChan)
+		if resp.Error != "" {
+			log.Warning(resp.Error)
+		}
+		return resp, nil
+	case <-ctx.Done():
+		return nil, errors.New("timeout")
+	}
 
-	return resp, nil
+	return nil, errors.New("impossible error")
+
 }
 
 // pull data from Mortar
 // gets called from frontend by GRPC server
 func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client mortarpb.Mortar_FetchServer) error {
 	t := time.Now()
+	defer fetchProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
 	authRequests.Inc()
 	activeQueries.Inc()
 	defer activeQueries.Dec()
@@ -184,12 +198,17 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 
 	fetchQueriesProcessed.Inc()
 
-	sem := <-stage.sem
-	defer func() { stage.sem <- sem }()
-
-	responseChan := make(chan *mortarpb.FetchResponse)
 	ctx, cancel := context.WithTimeout(client.Context(), 1*time.Minute)
 	defer cancel()
+
+	select {
+	case sem := <-stage.sem:
+		defer func() { stage.sem <- sem }()
+	case <-ctx.Done():
+		return errors.New("timeout")
+	}
+
+	responseChan := make(chan *mortarpb.FetchResponse)
 	queryCtx := Context{
 		ctx:     ctx,
 		request: *request,
@@ -208,7 +227,6 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	}()
 	stage.output <- queryCtx
 	e := <-ret
-	fetchProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
 	return e
 }
 
