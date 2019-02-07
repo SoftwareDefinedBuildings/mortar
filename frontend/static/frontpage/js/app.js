@@ -445,7 +445,7 @@ const About = {
                 </p>\
                 <p>\
                     <ul>\
-                        <li><b><a href="https://auth.mortardata.org/login?response_type=code&client_id=39seicjl2i1setbu0ur075n1bp&redirect_uri=https://mortardata.org/login">Log In</a></b></li>\
+                        <li><del><b><a href="https://auth.mortardata.org/login?response_type=code&client_id=39seicjl2i1setbu0ur075n1bp&redirect_uri=https://mortardata.org/login">Log In</a></b></del> Not yet!</li>\
                         <li><b><a href="https://auth.mortardata.org/signup?response_type=code&client_id=39seicjl2i1setbu0ur075n1bp&redirect_uri=https://mortardata.org/login">Sign Up</a></b></li>\
                         <li><b><a href="/docs/">Documentation (under development)</a></b></li>\
                         <li><b><a href="https://lists.eecs.berkeley.edu/sympa/subscribe/mortar-users">Subscribe</a></b> to the <a href="mailto:mortar-users@lists.eecs.berkeley.edu">mortar-users</a> mailing list for updates, announcements, discussions and support</li>\

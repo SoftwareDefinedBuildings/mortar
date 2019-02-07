@@ -24,8 +24,12 @@ You can also specify them as arguments to the PyMortar client constructor.
 ```python
 import pymortar
 
+# use ONE of these
+
 # use environment variables
 client = pymortar.Client()
+
+# ... OR ...
 
 # use explicit values
 client = pymortar.Client({
