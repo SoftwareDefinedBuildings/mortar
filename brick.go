@@ -80,7 +80,7 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 				select {
 				case ctx := <-input:
 					// new API
-					if len(ctx.request.Sites) > 0 && len(ctx.request.Collections) > 0 {
+					if len(ctx.request.Sites) > 0 && len(ctx.request.Views) > 0 {
 						if err := stage.processQuery2(ctx); err != nil {
 							log.Println(err)
 							ctx.response = nil
@@ -89,12 +89,16 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 						}
 						// old API
 					} else if len(ctx.request.Sites) > 0 && len(ctx.request.Streams) > 0 {
-						if err := stage.processQuery(ctx); err != nil {
-							log.Println(err)
-							ctx.response = nil
-							ctx.addError(err)
-							stage.output <- ctx
-						}
+						ctx.addError(errors.New("Need to upgrade to pymortar>=0.3.2"))
+						log.Error("Old client")
+						ctx.response = nil
+						stage.output <- ctx
+						//if err := stage.processQuery(ctx); err != nil {
+						//	log.Println(err)
+						//	ctx.response = nil
+						//	ctx.addError(err)
+						//	stage.output <- ctx
+						//}
 					} else if len(ctx.qualify_request.Required) > 0 {
 						if err := stage.processQualify(ctx); err != nil {
 							log.Warning(ctx.errors)
@@ -104,6 +108,8 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 							ctx.response = nil
 							stage.output <- ctx
 						}
+					} else {
+						stage.output <- ctx // if no sites/views, pass it along anyway?
 					}
 				case <-stage.ctx.Done():
 					// case that breaks the stage and releases resources
@@ -192,32 +198,32 @@ func (stage *BrickQueryStage) processQualify(ctx Context) error {
 	return nil
 }
 
-// We need to rethink how the Brick stage handles the collection + selection processing
+// We need to rethink how the Brick stage handles the view + dataFrame processing
 
 func (stage *BrickQueryStage) processQuery2(ctx Context) error {
-	// store collection name -> list of dataVars
-	var collectionDataVars = make(map[string][]string)
-	// store collection name -> list of indexes to dependent selections
-	var collectionSelections = make(map[string][]int)
-	for idx, selection := range ctx.request.Selections {
+	// store view name -> list of dataVars
+	var viewDataVars = make(map[string][]string)
+	// store view name -> list of indexes to dependent dataFrames
+	var viewDataFrames = make(map[string][]int)
+	for idx, dataFrame := range ctx.request.DataFrames {
 
 	tsLoop:
-		for _, timeseries := range selection.Timeseries {
-			collectionDataVars[timeseries.Collection] = append(collectionDataVars[timeseries.Collection], timeseries.DataVars...)
+		for _, timeseries := range dataFrame.Timeseries {
+			viewDataVars[timeseries.View] = append(viewDataVars[timeseries.View], timeseries.DataVars...)
 
-			// add the index of the selection to the list associated with the collection if it doesn't already exist in the list
-			for _, selIdx := range collectionSelections[timeseries.Collection] {
+			// add the index of the dataFrame to the list associated with the view if it doesn't already exist in the list
+			for _, selIdx := range viewDataFrames[timeseries.View] {
 				if selIdx == idx {
 					continue tsLoop
 				}
 			}
-			collectionSelections[timeseries.Collection] = append(collectionSelections[timeseries.Collection], idx)
+			viewDataFrames[timeseries.View] = append(viewDataFrames[timeseries.View], idx)
 
 		}
 	}
 
-	for _, collection := range ctx.request.Collections {
-		query, err := stage.db.ParseQuery(collection.Definition, stage.highwatermark)
+	for _, view := range ctx.request.Views {
+		query, err := stage.db.ParseQuery(view.Definition, stage.highwatermark)
 		if err != nil {
 			ctx.addError(err)
 			return err
@@ -227,7 +233,7 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 		// variables in the SELECT clause of the query. This removes the need for the user to know that the bf:uuid
 		// property is how to relate the points to the timeseries database. However, it also introduces the complexity
 		// of dealing with whether or not the variables *do* have associated timeseries or not.
-		mapping, _ := rewriteQuery(collectionDataVars[collection.Name], query)
+		mapping, _ := rewriteQuery(viewDataVars[view.Name], query)
 		for _, sitename := range ctx.request.Sites {
 			query.Graphs = []string{sitename}
 			res, err := stage.db.Select(ctx.ctx, query)
@@ -242,31 +248,31 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 			// each row to make sure we get the actual queries.
 			//stream := ctx.request.Streams[idx]
 
-			// need to associate the results of the query with this collection:
+			// need to associate the results of the query with this view:
 			// - site name
-			// - collection name
+			// - view name
 			// - variables involved in the query
 			brickresp := &mortarpb.FetchResponse{}
 			brickresp.Site = sitename
-			brickresp.Collection = collection.Name
+			brickresp.View = view.Name
 			brickresp.Variables = res.Variables
 
 			for _, row := range res.Rows {
-				//	// for each dependent selection
-				for _, selIdx := range collectionSelections[collection.Name] {
+				//	// for each dependent dataFrame
+				for _, selIdx := range viewDataFrames[view.Name] {
 					// for each timeseries
-					selection := ctx.request.Selections[selIdx]
-					// add uuids to the list on the Selection for each datavar from the collection we're currently working with
-					for _, ts := range selection.Timeseries {
-						if ts.Collection == collection.Name {
+					dataFrame := ctx.request.DataFrames[selIdx]
+					// add uuids to the list on the DataFrame for each datavar from the view we're currently working with
+					for _, ts := range dataFrame.Timeseries {
+						if ts.View == view.Name {
 							for _, dataVar := range ts.DataVars {
 								uuidx := mapping[dataVar]
-								selection.Uuids = append(selection.Uuids, row.Values[uuidx].Value)
+								dataFrame.Uuids = append(dataFrame.Uuids, row.Values[uuidx].Value)
 							}
 						}
 					}
-					// TODO: do we need to update the selection?
-					//ctx.request.Selections[selIdx] = selection
+					// TODO: do we need to update the dataFrame?
+					//ctx.request.DataFrames[selIdx] = dataFrame
 				}
 				//}
 				// we also add the query results to the output

@@ -57,14 +57,16 @@ func NewTimeseriesQueryStage(cfg *TimeseriesStageConfig) (*TimeseriesQueryStage,
 			for {
 				select {
 				case ctx := <-input:
-					if len(ctx.request.Sites) > 0 && len(ctx.request.Selections) > 0 {
+					if len(ctx.request.Sites) > 0 && len(ctx.request.DataFrames) > 0 {
 						if err := stage.processQuery2(ctx); err != nil {
 							log.Println(err)
 						}
 					} else if len(ctx.request.Sites) > 0 && len(ctx.request.Streams) > 0 {
-						if err := stage.processQuery(ctx); err != nil {
-							log.Println(err)
-						}
+						ctx.addError(errors.New("Need to upgrade to pymortar>=0.3.2"))
+						log.Error("Old client")
+						//if err := stage.processQuery(ctx); err != nil {
+						//	log.Println(err)
+						//}
 					}
 					ctx.response = nil
 					stage.output <- ctx
@@ -178,6 +180,9 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 	for _, reqstream := range ctx.request.Streams {
 		for _, uuStr := range reqstream.Uuids {
 			uu := uuid.Parse(uuStr)
+			if uu == nil {
+				continue
+			}
 			stream, err := stage.getStream(ctx.ctx, uu)
 			if err != nil {
 				ctx.addError(err)
@@ -284,8 +289,8 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 	//qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
 
 	// loop over all streams, and then over all UUIDs
-	for _, selection := range ctx.request.Selections {
-		for _, uuStr := range selection.Uuids {
+	for _, dataFrame := range ctx.request.DataFrames {
+		for _, uuStr := range dataFrame.Uuids {
 			uu := uuid.Parse(uuStr)
 			if uu == nil {
 				continue
@@ -297,7 +302,7 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 			}
 
 			// handle RAW streams
-			if selection.Aggregation == mortarpb.AggFunc_AGG_FUNC_RAW {
+			if dataFrame.Aggregation == mortarpb.AggFunc_AGG_FUNC_RAW {
 				// if raw data...
 				rawpoints, generations, errchan := stream.RawValues(ctx.ctx, start_time.UnixNano(), end_time.UnixNano(), 0)
 				resp := &mortarpb.FetchResponse{}
@@ -307,7 +312,7 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 					resp.Times = append(resp.Times, p.Time)
 					resp.Values = append(resp.Values, p.Value)
 					if pcount == TS_BATCH_SIZE {
-						resp.Selection = selection.Name
+						resp.DataFrame = dataFrame.Name
 						resp.Identifier = uuStr
 						ctx.response = resp
 						stage.output <- ctx
@@ -316,7 +321,7 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 					}
 				}
 				if len(resp.Times) > 0 {
-					resp.Selection = selection.Name
+					resp.DataFrame = dataFrame.Name
 					resp.Identifier = uuStr
 					ctx.response = resp
 					stage.output <- ctx
@@ -328,7 +333,7 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 					return err
 				}
 			} else {
-				windowSize, err := ParseDuration(selection.Window)
+				windowSize, err := ParseDuration(dataFrame.Window)
 				if err != nil {
 					ctx.addError(err)
 					return err
@@ -344,10 +349,10 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 					pcount += 1
 					resp.Times = append(resp.Times, p.Time)
 
-					resp.Values = append(resp.Values, valueFromAggFunc(p, selection.Aggregation))
+					resp.Values = append(resp.Values, valueFromAggFunc(p, dataFrame.Aggregation))
 
 					if pcount == TS_BATCH_SIZE {
-						resp.Selection = selection.Name
+						resp.DataFrame = dataFrame.Name
 						resp.Identifier = uuStr
 						ctx.response = resp
 						stage.output <- ctx
@@ -356,7 +361,7 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 					}
 				}
 				if len(resp.Times) > 0 {
-					resp.Selection = selection.Name
+					resp.DataFrame = dataFrame.Name
 					resp.Identifier = uuStr
 					ctx.response = resp
 					stage.output <- ctx
