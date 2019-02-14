@@ -46,8 +46,8 @@ message FetchRequest {
     // (range of data to download, resolution)
     TimeParams time = 3;
 
-    repeated Collection collections = 4;
-    repeated Selection selections = 5;
+    repeated View views = 4;
+    repeated DataFrame dataFrames = 5;
 }
 
 message Stream {
@@ -71,12 +71,12 @@ message FetchResponse {
     string error = 1;
     // stream definition fields:
     // - site name
-    // - collection name
-    // - selection name
-    // - variable name (from Collection definition)
+    // - view name
+    // - data frame name
+    // - variable name (from View definition)
     string site = 2;
-    string collection = 9;
-    string selection = 10;
+    string view = 9;
+    string dataFrame = 10;
     string variable = 3;
     // uuid
     string identifier = 4;
@@ -123,16 +123,16 @@ enum AggFunc {
 }
 
 
-message Collection {
-    // name of the collection
+message View {
+    // name of the View
     string name = 1;
-    // sites included in this collection
+    // sites included in this View
     repeated string sites = 2;
     // brick query definition
     string definition = 3;
 }
 
-message Selection {
+message DataFrame {
     // name of the streams
     string name = 1;
 
@@ -143,16 +143,16 @@ message Selection {
     // engineering units
     string unit = 4;
 
-    // refer to variables in collections
+    // refer to variables in Views
     repeated Timeseries timeseries = 5;
-    // instead of vars in collections, list the UUIDs explicitly.
+    // instead of vars in views, list the UUIDs explicitly.
     repeated string uuids = 6;
 }
 
 message Timeseries {
-    // name of the Collection
-    string collection = 1;
-    // list of variables from the collection that
+    // name of the View
+    string view = 1;
+    // list of variables from the view that
     // we want to get data for
     repeated string dataVars = 2;
 }
