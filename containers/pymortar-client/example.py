@@ -8,21 +8,21 @@ qualify_resp = client.qualify([
 
 req = pymortar.FetchRequest(
     sites=qualify_resp.sites,
-    collections=[
-      pymortar.Collection(
+    views=[
+      pymortar.View(
         sites=qualify_resp.sites,
         name="meter",
         definition="SELECT ?meter WHERE { ?meter rdf:type/rdfs:subClassOf* brick:Building_Electric_Meter };",
       )
     ],
-    selections=[
-      pymortar.Selection(
+    dataFrames=[
+      pymortar.DataFrame(
         name="meter_data",
         aggregation=pymortar.MEAN,
         window="1h",
         timeseries=[
           pymortar.Timeseries(
-            collection="meter",
+            view="meter",
             dataVars=["?meter"],
           )
         ],
