@@ -267,7 +267,7 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 						if ts.View == view.Name {
 							for _, dataVar := range ts.DataVars {
 								uuidx := mapping[dataVar]
-								dataFrame.Uuids = append(dataFrame.Uuids, row.Values[uuidx].Value)
+								dataFrame.Uuids = append(dataFrame.Uuids, stripQuotes(row.Values[uuidx].Value))
 							}
 						}
 					}
@@ -369,4 +369,11 @@ func transformRow(r *logpb.Row) *mortarpb.Row {
 		newr.Values = append(newr.Values, &mortarpb.URI{Namespace: rr.Namespace, Value: rr.Value})
 	}
 	return newr
+}
+
+func stripQuotes(s string) string {
+	if s[0] == '"' && s[len(s)-1] == '"' {
+		return s[1 : len(s)-1]
+	}
+	return s
 }
