@@ -52,9 +52,9 @@ response = client.qualify([
 Example:
 
 ```python
-meter_query = """SELECT ?meter 
-WHERE { 
-    ?meter rdf:type/rdfs:subClassOf* brick:Electric_Meter 
+meter_query = """SELECT ?meter
+WHERE {
+    ?meter rdf:type/rdfs:subClassOf* brick:Electric_Meter
 };"""
 
 response = client.qualify([meter_query])
@@ -70,15 +70,15 @@ The Mortar `Fetch` API call takes as an argument a description of the timeseries
 
 A *timeseries stream* is the sequence of `<time, value>` pairs associated with a particular sensor, setpoint or other origin. A timeseries stream is identified by a *UUID*, which is a unique 36-byte identifier, e.g. `4daeab54-2517-11e9-ab30-54ee758a2ce3`. This corresponds to a column in a Pandas DataFrame.
 
-#### Collections
+#### Views
 
-A `pymortar.Collection` captures the results of a Brick query as a named SQL table. The results can be used to specify timeseries streams whose data we want to retrieve. 
+A `pymortar.View` captures the results of a Brick query as a named SQL table. The results can be used to specify timeseries streams whose data we want to retrieve.
 
 ```proto
-message Collection {
-    // name of the collection
+message View {
+    // name of the View
     string name = 1;
-    // sites included in this collection
+    // sites included in this View
     repeated string sites = 2;
     // brick query definition
     string definition = 3;
@@ -89,14 +89,14 @@ Examples:
 
 ```python
 # building meters
-meter_collection = pymortar.Collection(
+meter_view = pymortar.View(
     name="meters",
     sites=qualify_response.sites,
     definition="SELECT ?meter WHERE { ?meter rdf:type/rdfs:subClassOf* brick:Building_Electric_Meter };",
 )
 
 # thermostat points
-tstat_point_collection = pymortar.Collection(
+tstat_point_view = pymortar.View(
     name="tstat_points",
     sites=qualify_response.sites,
     definition="""SELECT ?tstat ?state ?temp ?hsp ?csp
@@ -118,7 +118,7 @@ tstat_point_collection = pymortar.Collection(
 
 # also includes temperature sensors from thermostats! If we want to separate the two
 # groups, we can use SQL joins on the resulting tables
-temperature_sensors = pymortar.Collection(
+temperature_sensors = pymortar.View(
     name="temp_sensors",
     definition="""SELECT ?temp ?room ?zone
         WHERE {
@@ -131,13 +131,13 @@ temperature_sensors = pymortar.Collection(
 )
 ```
 
-#### Selections
+#### DataFrames
 
-A `pymortar.Selection` is a set of timeseries streams that has been given a name, an aggregation and window size for the aggregation. The selection can be specified as an *early binding* using a list of UUIDs, or as a *late binding* in the form of references to variables in `Collections`.
+A `pymortar.DataFrame` is a set of timeseries streams that has been given a name, an aggregation and window size for the aggregation. The dataframe can be specified as an *early binding* using a list of UUIDs, or as a *late binding* in the form of references to variables in `Views`.
 
 ```proto
-message Selection {
-    // name of the selection
+message DataFrame {
+    // name of the dataframe
     string name = 1;
 
     // aggregation function
@@ -147,16 +147,16 @@ message Selection {
     // engineering units
     string unit = 4;
 
-    // refer to variables in collections
+    // refer to variables in views
     repeated Timeseries timeseries = 5;
-    // instead of vars in collections, list the UUIDs explicitly.
+    // instead of vars in views, list the UUIDs explicitly.
     repeated string uuids = 6;
 }
 
 message Timeseries {
-    // name of the Collection
-    string collection = 1;
-    // list of variables from the collection that
+    // name of the View
+    string view = 1;
+    // list of variables from the view that
     // we want to get data for
     repeated string dataVars = 2;
 }
@@ -166,21 +166,21 @@ Examples:
 
 ```python
 # defining the meter stream explicitly
-meter_stream = pymortar.Selection(
+meter_stream = pymortar.DataFrame(
     name="meter_data",
     uuids=["4daeab54-2517-11e9-ab30-54ee758a2ce3", "15c0a642-2518-11e9-ab30-54ee758a2ce3"],
     aggregation=pymortar.MEAN,
     window="15m"
 )
 
-# defining the meter stream implicitly using the 'meters' Collection above
-meter_stream = pymortar.Selection(
+# defining the meter stream implicitly using the 'meters' View above
+meter_stream = pymortar.DataFrame(
     name="meter_data",
     aggregation=pymortar.MEAN,
     window="15m",
     timeseries=[
         pymortar.Timeseries(
-            collection="meters",
+            view="meters",
             dataVars=["?meter"],
         )
     ]
@@ -188,17 +188,17 @@ meter_stream = pymortar.Selection(
 
 # 15 min mean aggregation for all temperature sensors; from thermostats and from the broader
 # query. This will have some overlap, but we can distinguish between the two groups later.
-temperature_streams = pymortar.Selection(
+temperature_streams = pymortar.DataFrame(
     name="temperature_sensor_data",
     aggregation=pymortar.MEAN,
     window="15m",
     timeseries=[
         pymortar.Timeseries(
-            collection="tstat_points",
+            view="tstat_points",
             dataVars=["?temp"],
         ),
         pymortar.Timeseries(
-            collection="temp_sensors",
+            view="temp_sensors",
             dataVars=["?temp"],
         ),
     ]
@@ -207,13 +207,13 @@ temperature_streams = pymortar.Selection(
 # for the integer-valued streams (thermostat state, heating/cooling setpoint),
 # we want to snap the aggregation to a real value that the device experienced;
 # we can't have a thermostat state of 2.5 for example.
-thermostat_status_streams = pymortar.Selection(
+thermostat_status_streams = pymortar.DataFrame(
     name="thermostat_status_data",
     aggregation=pymortar.MAX,
     window="1m",
     timeseries=[
         pymortar.Timeseries(
-            collection="tstat_points",
+            view="tstat_points",
             dataVars=["?state","?hsp","?csp"]
         )
     ]
@@ -248,12 +248,12 @@ Now all that's left is to put the query together and dispatch it to Mortar:
 # form the full request object
 request = pymortar.FetchRequest(
     sites=qualify_response.sites, # from our call to Qualify
-    collections=[
-        meter_collection,
-        tstat_point_collection,
+    views=[
+        meter_view,
+        tstat_point_view,
         temperature_sensors
     ],
-    selections=[
+    dataFrames=[
         meter_stream,
         temperature_streams,
         thermostat_status_streams
@@ -265,38 +265,38 @@ result = client.fetch(request)
 
 ### Working With Datasets
 
-Once we have the response from the `Fetch` call (in the form of a `pymortar.Result` object), we can manipulate the returned metadata (`result.collections`) and data (`result.selections`).
+Once we have the response from the `Fetch` call (in the form of a `pymortar.Result` object), we can manipulate the returned metadata (`result.views`) and data (`result.dataFrames`).
 
 
 #### Timeseries
 
-`pymortar.Result` objects store all timeseries data for a `Fetch` call in a different pandas DataFrame for each Selection.
+`pymortar.Result` objects store all timeseries data for a `Fetch` call in a different pandas DataFrame for each DataFrame.
 
 ```python
-result.selections
+result.dataFrames
 # ['meter_data','temperature_sensor_data','thermostat_status_data']
 
 result['meter_data'].describe()
 #       0ba942ac-9e44-3c0f-8529-8a59d3187a87  \
-#       count                           8760.000000   
-#       mean                            2662.821329   
-#       std                              667.114554   
-#       min                                0.000000   
-#       25%                             2324.470078   
-#       50%                             2592.125795   
-#       75%                             3141.283526   
-#       max                             3752.945826   
+#       count                           8760.000000
+#       mean                            2662.821329
+#       std                              667.114554
+#       min                                0.000000
+#       25%                             2324.470078
+#       50%                             2592.125795
+#       75%                             3141.283526
+#       max                             3752.945826
 #   ...
 ```
 
-Access the DataFrame containing the data for a Selection using the `result[<selection name>]` syntax, or the `result.get(<selection name>).
-The names of all Selections can be obtained from the `result.selections` property.
+Access the DataFrame containing the data for a DataFrame using the `result[<dataframe name>]` syntax, or the `result.get(<dataframe name>).
+The names of all DataFrames can be obtained from the `result.dataFrames` property.
 
 The columns of each DataFrame are the timeseries stream UUIDs. UUIDs can be connected to their meaning and context through the Result object's metadata interface.
 
 #### Metadata
 
-`pymortar.Result` creates an in-memory SQLite table for each of the `pymortar.Collection`s in your `Fetch` query, containing the results of that query. The tables are named according to the name of the Collection, so it is simple to see the schema.
+`pymortar.Result` creates an in-memory SQLite table for each of the `pymortar.View`s in your `Fetch` query, containing the results of that query. The tables are named according to the name of the View, so it is simple to see the schema.
 
 ```python
 result.describe_table("meters")

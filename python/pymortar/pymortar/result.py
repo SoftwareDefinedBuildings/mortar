@@ -182,7 +182,7 @@ class Result:
         return self.tables
 
     @property
-    def dataframes(self):
+    def dataFrames(self):
         """
         Returns the list of dataframes in this result. Access dataframes using
         Result['dataframe name'] or Result.get('dataframe name')
