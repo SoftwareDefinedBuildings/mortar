@@ -35,19 +35,19 @@ class Result:
         # result object has its own sqlite3 in-memory database
         self.conn = sqlite3.connect(':memory:')
         self._series = {}
-        self._selections = {}
+        self._dataframes = {}
         self._df = None
         self._dfs = {}
         self._tables = {}
 
     def __repr__(self):
         numtables = len(self._tables) if self._tables else "n/a"
-        selections = self._selections.values()
+        dataframes = self._dataframes.values()
         numcols = sum(map(lambda x: len(x.columns), self._dfs.values()))
         numvals = sum(map(lambda x: x.size, self._dfs.values()))
         values = [
-            "collections:{0}".format(numtables),
-            "selections:{0}".format(len(selections)),
+            "views:{0}".format(numtables),
+            "dataframes:{0}".format(len(dataframes)),
             "timeseries:{0}".format(numcols),
             "vals:{0}".format(numvals)
         ]
@@ -81,23 +81,23 @@ class Result:
             This parameter is a FetchResponse object obtained from
             calling the Mortar Fetch() call.
         """
-        if resp.collection not in self._tables and len(resp.variables) > 0:
-            make_table(self.conn, resp.collection, resp.variables)
-            self._tables[resp.collection] = list(map(lambda x: x.lstrip("?"), resp.variables))
-            self._tables[resp.collection].append("site")
-        if resp.collection in self._tables:
+        if resp.view not in self._tables and len(resp.variables) > 0:
+            make_table(self.conn, resp.view, resp.variables)
+            self._tables[resp.view] = list(map(lambda x: x.lstrip("?"), resp.variables))
+            self._tables[resp.view].append("site")
+        if resp.view in self._tables:
             c = self.conn.cursor()
             for row in resp.rows:
                 values = ['"{0}"'.format(format_uri(u)) for u in row.values]
                 values.append('"{0}"'.format(resp.site))
-                c.execute("INSERT INTO {0} values ({1})".format(resp.collection, ", ".join(values)))
+                c.execute("INSERT INTO {0} values ({1})".format(resp.view, ", ".join(values)))
 
-        if resp.identifier and resp.selection:
-            if resp.selection not in self._selections:
-                self._selections[resp.selection] = {}
-            if resp.identifier not in self._selections[resp.selection]:
-                self._selections[resp.selection][resp.identifier] = []
-            self._selections[resp.selection][resp.identifier].append(
+        if resp.identifier and resp.dataFrame:
+            if resp.dataFrame not in self._dataframes:
+                self._dataframes[resp.dataFrame] = {}
+            if resp.identifier not in self._dataframes[resp.dataFrame]:
+                self._dataframes[resp.dataFrame][resp.identifier] = []
+            self._dataframes[resp.dataFrame][resp.identifier].append(
                 pd.Series(resp.values, index=pd.to_datetime(resp.times), name=resp.identifier)
             )
 
@@ -139,60 +139,60 @@ class Result:
             )
 
     def build(self):
-        if len(self._selections) == 0:
+        if len(self._dataframes) == 0:
             self._df = pd.DataFrame()
             return
         t = time.time()
-        for selection, timeseries in self._selections.items():
-            timeseries = self._selections[selection]
+        for dataframe, timeseries in self._dataframes.items():
+            timeseries = self._dataframes[dataframe]
             for uuidname, contents in timeseries.items():
                 ser = pd.concat(contents)
                 ser = ser[~ser.index.duplicated()]
-                self._selections[selection][uuidname] = ser
-            self._dfs[selection] = pd.concat(self._selections[selection].values(), axis=1, copy=False)
+                self._dataframes[dataframe][uuidname] = ser
+            self._dfs[dataframe] = pd.concat(self._dataframes[dataframe].values(), axis=1, copy=False)
         t2 = time.time()
         #print("Building DF took {0}".format(t2-t))
 
     def __getitem__(self, key):
-        if key not in self._selections:
+        if key not in self._dataframes:
             return None
         if key not in self._dfs:
             self.build()
         return self._dfs[key]
 
     def __contains__(self, key):
-        return key in self._selections
+        return key in self._dataframes
 
     def get(self, key, default=None):
-        if key not in self._selections:
+        if key not in self._dataframes:
             return default
         return self[key]
 
     @property
-    def collections(self):
+    def views(self):
         """
-        Returns the list of collections in this result. Access collections as SQL
-        tables using Result.query("select * from {collection name}")
+        Returns the list of views in this result. Access views as SQL
+        tables using Result.query("select * from {view name}")
 
         Returns
         -------
         l: list of str
-          collection names
+          view names
         """
         return self.tables
 
     @property
-    def selections(self):
+    def dataframes(self):
         """
-        Returns the list of selections in this result. Access selections using
-        Result['selection name'] or Result.get('selection name')
+        Returns the list of dataframes in this result. Access dataframes using
+        Result['dataframe name'] or Result.get('dataframe name')
 
         Returns
         -------
         l: list of str
-          selection names
+          dataframe names
         """
-        return list(self._selections.keys())
+        return list(self._dataframes.keys())
 
 
     @property

@@ -3,7 +3,7 @@ from pymortar import mortar_pb2
 from pymortar import mortar_pb2_grpc
 from pymortar.result import Result
 
-from pymortar.mortar_pb2 import GetAPIKeyRequest, FetchRequest, QualifyRequest, Stream, TimeParams, Timeseries, Collection, Selection
+from pymortar.mortar_pb2 import GetAPIKeyRequest, FetchRequest, QualifyRequest, Stream, TimeParams, Timeseries, View, DataFrame
 
 from pymortar.mortar_pb2 import AGG_FUNC_RAW  as RAW
 from pymortar.mortar_pb2 import AGG_FUNC_MEAN as MEAN
@@ -104,9 +104,6 @@ class Client:
 
             sites: list of strings
                 Each string is a site name. These can be found through the qualify() API call
-
-            streams: list of Streams
-                Streams are how Mortar refers to collections of timeseries data.
 
             time: TimeParams
                 Defines the temporal parameters for the data query
