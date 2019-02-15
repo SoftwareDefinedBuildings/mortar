@@ -9,7 +9,7 @@ The Mortar API delivers timeseries data using a streaming interface; PyMortar bu
 PyMortar is available on pip:
 
 ```bash
-$ pip install pymortar>=1.0.0a0
+$ pip install pymortar>=1.0.0
 ```
 
 It depends on pandas and some GRPC-related packages. These should be installed automatically. You may find it helpful to install PyMortar inside a [virtual environment](https://docs.python.org/3/library/venv.html) or use the [PyMortar Docker container](quick-start.md).
