@@ -1,15 +1,14 @@
 module git.sr.ht/~gabe/mortar
 
 require (
-	cloud.google.com/go v0.35.1 // indirect
 	dmitri.shuralyov.com/app/changes v0.0.0-20181114035150-5af16e21babb // indirect
 	dmitri.shuralyov.com/service/change v0.0.0-20190203163610-217368fe4577 // indirect
 	git.apache.org/thrift.git v0.12.0 // indirect
 	git.sr.ht/~gabe/hod v0.0.0-20190206191513-dd8b88e54346
 	github.com/Shopify/sarama v1.20.1 // indirect
 	github.com/aws/aws-sdk-go v1.16.19
-	github.com/coreos/etcd v3.3.11+incompatible // indirect
-	github.com/coreos/go-systemd v0.0.0-20190204112023-081494f7ee4f // indirect
+	github.com/coreos/etcd v3.3.12+incompatible // indirect
+	github.com/coreos/go-systemd v0.0.0-20190212144455-93d5ec2c7f76 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dgryski/go-farm v0.0.0-20190104051053-3adb47b1fb0f // indirect
 	github.com/glycerine/go-unsnap-stream v0.0.0-20181221182339-f9677308dec2 // indirect
@@ -17,11 +16,11 @@ require (
 	github.com/gogo/protobuf v1.2.0 // indirect
 	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
 	github.com/golang/protobuf v1.2.0
-	github.com/google/pprof v0.0.0-20190109223431-e84dfd68c163 // indirect
+	github.com/google/pprof v0.0.0-20190208070709-b421f19a5c07 // indirect
 	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
 	github.com/gorilla/mux v1.7.0 // indirect
-	github.com/gregjones/httpcache v0.0.0-20190203031600-7a902570cb17 // indirect
+	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.7.0 // indirect
 	github.com/huichen/murmur v0.0.0-20130808212358-e0489551cf51 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
@@ -32,7 +31,7 @@ require (
 	github.com/prometheus/client_golang v0.9.2
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90
 	github.com/prometheus/common v0.2.0 // indirect
-	github.com/prometheus/procfs v0.0.0-20190203183350-488faf799f86 // indirect
+	github.com/prometheus/procfs v0.0.0-20190209105433-f8d8b3f739bd // indirect
 	github.com/russross/blackfriday v2.0.0+incompatible // indirect
 	github.com/shurcooL/go v0.0.0-20190121191506-3fef8c783dec // indirect
 	github.com/shurcooL/gofontwoff v0.0.0-20181114050219-180f79e6909d // indirect
@@ -56,18 +55,17 @@ require (
 	github.com/ugorji/go/codec v0.0.0-20190204201341-e444a5086c43 // indirect
 	go.opencensus.io v0.19.0 // indirect
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
-	golang.org/x/build v0.0.0-20190206185221-ca70795ae665 // indirect
-	golang.org/x/crypto v0.0.0-20190131182504-b8fe1690c613
-	golang.org/x/exp v0.0.0-20190125153040-c74c464bbbf2 // indirect
-	golang.org/x/net v0.0.0-20190206173232-65e2d4e15006
-	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1 // indirect
+	golang.org/x/build v0.0.0-20190214220220-5d2b36639e09 // indirect
+	golang.org/x/crypto v0.0.0-20190211182817-74369b46fc67
+	golang.org/x/exp v0.0.0-20190212162250-21964bba6549 // indirect
+	golang.org/x/net v0.0.0-20190213061140-3a22650c66bd
+	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635 // indirect
 	golang.org/x/perf v0.0.0-20190124201629-844a5f5b46f4 // indirect
-	golang.org/x/sys v0.0.0-20190204203706-41f3e6584952 // indirect
-	golang.org/x/tools v0.0.0-20190206175659-4892ae6946ab // indirect
-	google.golang.org/genproto v0.0.0-20190201180003-4b09977fb922 // indirect
+	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a // indirect
+	golang.org/x/tools v0.0.0-20190214204934-8dcb7bc8c7fe // indirect
 	google.golang.org/grpc v1.18.0
 	gopkg.in/BTrDB/btrdb.v4 v4.15.3 // indirect
 	gopkg.in/btrdb.v4 v4.15.3
-	honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe // indirect
+	honnef.co/go/tools v0.0.0-20190215041234-466a0476246c // indirect
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )
