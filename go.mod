@@ -4,7 +4,7 @@ require (
 	dmitri.shuralyov.com/app/changes v0.0.0-20181114035150-5af16e21babb // indirect
 	dmitri.shuralyov.com/service/change v0.0.0-20190203163610-217368fe4577 // indirect
 	git.apache.org/thrift.git v0.12.0 // indirect
-	git.sr.ht/~gabe/hod v0.0.0-20190206191513-dd8b88e54346
+	git.sr.ht/~gabe/hod v0.0.0-20190217201420-9d30630a04fe
 	github.com/Shopify/sarama v1.20.1 // indirect
 	github.com/aws/aws-sdk-go v1.16.19
 	github.com/coreos/etcd v3.3.12+incompatible // indirect
@@ -55,7 +55,7 @@ require (
 	github.com/ugorji/go/codec v0.0.0-20190204201341-e444a5086c43 // indirect
 	go.opencensus.io v0.19.0 // indirect
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
-	golang.org/x/build v0.0.0-20190214220220-5d2b36639e09 // indirect
+	golang.org/x/build v0.0.0-20190215225244-0261b66eb045 // indirect
 	golang.org/x/crypto v0.0.0-20190211182817-74369b46fc67
 	golang.org/x/exp v0.0.0-20190212162250-21964bba6549 // indirect
 	golang.org/x/net v0.0.0-20190213061140-3a22650c66bd
@@ -63,6 +63,7 @@ require (
 	golang.org/x/perf v0.0.0-20190124201629-844a5f5b46f4 // indirect
 	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a // indirect
 	golang.org/x/tools v0.0.0-20190214204934-8dcb7bc8c7fe // indirect
+	google.golang.org/genproto v0.0.0-20190215211957-bd968387e4aa // indirect
 	google.golang.org/grpc v1.18.0
 	gopkg.in/BTrDB/btrdb.v4 v4.15.3 // indirect
 	gopkg.in/btrdb.v4 v4.15.3
