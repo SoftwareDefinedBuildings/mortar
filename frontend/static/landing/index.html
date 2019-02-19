@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="css/materialize.min.css">
+    <!-- icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="js/materialize.min.js"></script>
+    
+    <style>
+    .p3 {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    a:link {
+        color: blue;
+    }
+    </style>
+
+	<title>Mortar Data</title>
+  </head>
+  <body>
+    <div class="container">
+        <div class="row">
+            <nav>
+                <div class="nav-wrapper blue darken-3">
+                    <div class="p3"><a href="#" class="white-text brand-logo">MortarData</a></div>
+                    <ul id="nav-mobile" class="right hide-on-med-and-down">
+                        <li><a href="https://auth.mortardata.org/signup?response_type=code&client_id=39seicjl2i1setbu0ur075n1bp&redirect_uri=https://mortardata.org/login">Sign Up</a></li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="col s3"> <!-- nav panel -->
+                <h4 class="p3">Menu</h4>
+                <div class="collection">
+                    <a href="https://auth.mortardata.org/signup?response_type=code&client_id=39seicjl2i1setbu0ur075n1bp&redirect_uri=https://mortardata.org/login" class="black-text collection-item">Sign Up</a>
+                    <a href="/docs" class="black-text collection-item">Documentation</a>
+                    <a href="https://github.com/SoftwareDefinedBuildings/mortar-analytics" class="black-text collection-item">Mortar Analytics Library</a>
+                </div>
+            </div>
+            <div class="col s9"> <!-- body -->
+                <div class="card orange">
+                    <div class="card-content black-text">
+                        <p><b>Mortar is in Alpha!</b> Please <a href="https://lists.eecs.berkeley.edu/sympa/subscribe/mortar-users">subscribe</a> to the mortar-users mailing list for updates and announcements</a></p>
+                    </div>
+                </div>
+                <div class="section">
+                    <h4>What is Mortar?</h4>
+                    <p>Access to large amounts of real-world data has long been a barrier to the development and evaluation of analytics applications for the built environment. Open data sets exist, but they are limited in their <u>span</u> (how much data is available) and <u>context</u> (what kind of data is available and how it is described).</p>
+                    <p>The goal of Mortar is to provide a large, diverse and consistently updated testbed of buildings and building data to facilitate reproducible evaluation of building analytics.</p>
+                    <p>At this time, Mortar contains <b>107 buildings</b>, spanning over <b>10 billion data points</b> and <b>26,000 data streams</b>. Context for these data streams  is provided by a <a href="https://brickschema.org/">Brick model</a>. The Brick model describes for each building: (1) what data streams exist and what they measure, (2) what equipment exists and how it is monitored, (3) the relationships between equipment in terms of flows, composition and location.</p>
+                </div>
+                <div class="divider"></div>
+                <div class="section">
+                    <h4>Getting Started</h4>
+                    <p>If this is your first time to Mortar, please <a href="https://auth.mortardata.org/signup?response_type=code&client_id=39seicjl2i1setbu0ur075n1bp&redirect_uri=https://mortardata.org/login">make an account</a>.</p>
+                    <p>Documentation can be found <a href="/docs">here</a>. Keep in mind it is a work in progress!</p>
+                    <p>The <a href="https://github.com/SoftwareDefinedBuildings/mortar-analytics">Mortar Analytics Library</a> is an open-source repository of building data analytics built using Mortar. Feel free to use them and improve upon them by submitting changes (or your own analytics) with a pull request.</p>
+                </div>
+
+                <div class="divider"></div>
+                <div class="section">
+                    <h4>Publications</h4>
+                    <p><b>Mortar: An Open Testbed for Portable Building Analytics</b> <a href="http://people.eecs.berkeley.edu/~gtfierro/papers/mortar.pdf">[pdf]</a>. Gabe Fierro, Marco Pritoni, Moustafa AbdelBaky, Paul Raftery, Therese Peffer, Greg Thomson, David E. Culler. 5th ACM International Conference on Systems for Energy-Efficient Built Environments (BuildSys), Shenzhen, China, November 2018.</p>
+                    
+                </div>
+            </div>
+        </div>
+        <footer class="page-footer blue darken-3">
+            <div class="footer-copyright">
+                <div class="p3">&copy; 2018, 2019 UC Berkeley</div>
+                <div class="p3">Built by <a href="http://people.eecs.berkeley.edu/~gtfierro/">Gabe</a></div>
+            </div>
+        </footer>
+    </div>
+  </body>
+</html>

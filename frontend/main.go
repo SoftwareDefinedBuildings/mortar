@@ -9,7 +9,7 @@ func main() {
 	fs := http.StripPrefix("/docs/", http.FileServer(http.Dir("static/site")))
 	http.Handle("/docs/", fs)
 
-	fs2 := http.FileServer(http.Dir("static/frontpage"))
+	fs2 := http.FileServer(http.Dir("static/landing"))
 	http.Handle("/", fs2)
 
 	fs3 := http.StripPrefix("/login/", http.FileServer(http.Dir("static/login")))

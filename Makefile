@@ -17,8 +17,10 @@ frontend-container:
 	mkdocs build
 	mkdir -p containers/frontend/static/site
 	mkdir -p containers/frontend/static/login
+	mkdir -p containers/frontend/static/landing
 	cp -r site/* containers/frontend/static/site/
 	cp -r frontend/static/login/index.html containers/frontend/static/login/index.html
+	cp -r frontend/static/landing/* containers/frontend/static/landing/
 	go build -o containers/frontend/exec-frontend ./frontend
 	docker build -t mortar/frontend:latest containers/frontend
 

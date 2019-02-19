@@ -431,8 +431,8 @@ const About = {
         <v-layout row wrap>\
             <v-flex md6 xs12 class="px-5">\
                 <h4 class="text-xs-left headline">The <b>M</b>odular <b>O</b>pen <b>R</b>eproducibility <b>T</b>estbed for <b>A</b>nalysis and <b>R</b>esearch</h4>\
-                <v-alert class="my-5" :value="true" type="error">\
-                    <b>Mortar is not yet available!</b> Please <a href="https://lists.eecs.berkeley.edu/sympa/subscribe/mortar-users">subscribe</a> to the mortar-users mailing list for updates and announcements</a>\
+                <v-alert class="my-5" :value="true" type="warning">\
+                    <b>Mortar is in Alpha!</b> Please <a href="https://lists.eecs.berkeley.edu/sympa/subscribe/mortar-users">subscribe</a> to the mortar-users mailing list for updates and announcements</a>\
                 </v-alert>\
                 <p>\
                     Access to large amounts of real-world data has long been a barrier to the development and evaluation of analytics applications for the built environment. Open data sets exist, but they are limited in their <u>span</u> (how much data is available) and <u>context</u> (what kind of data is available and how it is described).\
@@ -447,7 +447,7 @@ const About = {
                     <ul>\
                         <li><del><b><a href="https://auth.mortardata.org/login?response_type=code&client_id=39seicjl2i1setbu0ur075n1bp&redirect_uri=https://mortardata.org/login">Log In</a></b></del> Not yet!</li>\
                         <li><b><a href="https://auth.mortardata.org/signup?response_type=code&client_id=39seicjl2i1setbu0ur075n1bp&redirect_uri=https://mortardata.org/login">Sign Up</a></b></li>\
-                        <li><b><a href="/docs/">Documentation (under development)</a></b></li>\
+                        <li><b><a href="/docs/">Documentation</a></b></li>\
                         <li><b><a href="https://lists.eecs.berkeley.edu/sympa/subscribe/mortar-users">Subscribe</a></b> to the <a href="mailto:mortar-users@lists.eecs.berkeley.edu">mortar-users</a> mailing list for updates, announcements, discussions and support</li>\
                     </ul>\
                 </p>\
