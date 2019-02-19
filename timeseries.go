@@ -293,6 +293,7 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 		for _, uuStr := range dataFrame.Uuids {
 			uu := uuid.Parse(uuStr)
 			if uu == nil {
+				log.Warningf("Could not parse uuid %s", uuStr)
 				continue
 			}
 			stream, err := stage.getStream(ctx.ctx, uu)
