@@ -20,6 +20,7 @@ func init() {
 
 var (
 	unauthorizedErr = errors.New("Unauthorized")
+	requestTimeout  = 15 * time.Minute
 )
 
 type ApiFrontendBasicStage struct {
@@ -136,7 +137,7 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 
 	qualifyQueriesProcessed.Inc()
 
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
 	defer cancel()
 
 	// prepare context for the execution
@@ -176,6 +177,10 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	authRequests.Inc()
 	activeQueries.Inc()
 	defer activeQueries.Dec()
+
+	ctx, cancel := context.WithTimeout(client.Context(), requestTimeout)
+	defer cancel()
+
 	headers, ok := metadata.FromIncomingContext(client.Context())
 	if !ok {
 		return unauthorizedErr
@@ -197,9 +202,6 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	}
 
 	fetchQueriesProcessed.Inc()
-
-	ctx, cancel := context.WithTimeout(client.Context(), 1*time.Minute)
-	defer cancel()
 
 	select {
 	case sem := <-stage.sem:

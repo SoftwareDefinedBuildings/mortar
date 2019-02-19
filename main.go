@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/profile"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -152,6 +154,16 @@ func main() {
 	}
 	log.Infof("%+v", cfg)
 
+	brickready := false
+	health := healthcheck.NewHandler()
+	health.AddReadinessCheck("brick", func() error {
+		if !brickready {
+			return errors.New("Brick not ready")
+		}
+		return nil
+	})
+	go http.ListenAndServe("0.0.0.0:8086", health)
+
 	http.Handle("/metrics", promhttp.Handler())
 	go func() {
 		log.Infof("Prometheus endpoint at %s", cfg.PrometheusAddr)
@@ -182,6 +194,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	brickready = true
 
 	ts_stage_cfg := &TimeseriesStageConfig{
 		Upstream:     md_stage,
