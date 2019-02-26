@@ -173,7 +173,11 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 // gets called from frontend by GRPC server
 func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client mortarpb.Mortar_FetchServer) error {
 	t := time.Now()
-	defer fetchProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
+	defer func() {
+		log.Info("Fetch took ", time.Since(t))
+		fetchProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
+	}()
+
 	authRequests.Inc()
 	activeQueries.Inc()
 	defer activeQueries.Dec()
@@ -219,17 +223,47 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	ret := make(chan error)
 	go func() {
 		var err error
-		for resp := range responseChan {
-			messagesSent.Inc()
-			if err = client.Send(resp); err != nil {
-				break
+
+	sendloop:
+		for {
+			select {
+			case resp := <-responseChan:
+				if resp == nil {
+					// if this is nil then we are done, but there's no error (yet)
+					break sendloop
+				} else if err = client.Send(resp); err != nil {
+					// we have an error on sending, so we tear it all down
+					log.Error(errors.Wrap(err, "Error on sending"))
+					// have to remember to call cancel() here
+					cancel()
+					break sendloop
+				} else {
+					// happy path
+					messagesSent.Inc()
+				}
+			case <-ctx.Done():
+				err = errors.New("timeout")
+				break sendloop
 			}
 		}
 		ret <- err
 	}()
-	stage.output <- queryCtx
-	e := <-ret
-	return e
+
+	select {
+	case stage.output <- queryCtx:
+	case <-ctx.Done():
+		return errors.New("timeout")
+	}
+
+	select {
+	case e := <-ret:
+		log.Error("Got Error in ret ", e)
+		return e
+	case <-ctx.Done():
+		return errors.New("timeout")
+	}
+
+	return nil
 }
 
 func (stage *ApiFrontendBasicStage) GetAPIKey(ctx context.Context, request *mortarpb.GetAPIKeyRequest) (*mortarpb.APIKeyResponse, error) {
