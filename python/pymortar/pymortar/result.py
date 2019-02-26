@@ -81,6 +81,8 @@ class Result:
             This parameter is a FetchResponse object obtained from
             calling the Mortar Fetch() call.
         """
+        if resp.error != "":
+            raise Exception(resp.error)
         if resp.view not in self._tables and len(resp.variables) > 0:
             make_table(self.conn, resp.view, resp.variables)
             self._tables[resp.view] = list(map(lambda x: x.lstrip("?"), resp.variables))
