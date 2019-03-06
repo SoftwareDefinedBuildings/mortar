@@ -1,4 +1,4 @@
-# How to Contribute to the Mortar Analytics Library
+# Contributing
 
 Mortar is a community-led effort and will succeed on the contribution of all edits -- big or small -- that seek to improve the quality of the Mortar analytics library.
 
@@ -27,9 +27,10 @@ Following here are some guidelines on how to structure or conduct these edits.
 - The application should be contained in its own folder and given a proper name
 - Application folder should contain an `app.py` file that contains the coordinating logic for the application
 - `app.py` should include example usage at the bottom of the file using the following construct:
-    ```python
-    if __name__ == '__main__':
-        # example code for how to use your application goes here
-    ```
+
+```python
+if __name__ == '__main__':
+    # example code for how to use your application goes here
+```
 - the application folder should come with a `requirements.txt` file that enumerates the packages required to execute the application
 - the application folder should come with a `README.md` file containing a description of the application

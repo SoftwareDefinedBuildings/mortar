@@ -1,4 +1,4 @@
-# Mortar Documentation
+# Overview
 
 Access to large amounts of real-world data has long been a barrier to the development and evaluation of analytics applications for the built environment. Open data sets exist, but they are limited in their span (how much data is available) and context (what kind of data is available and how it is described).
 

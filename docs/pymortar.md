@@ -1,4 +1,4 @@
-# PyMortar Documentation
+# PyMortar
 
 PyMortar is a handy-dandy library for Python 3 (may also work on Python 2, but this is untested) that makes it easy to retrieve data from the Mortar API.
 PyMortar wraps the underlying [GRPC API](https://git.sr.ht/~gabe/mortar/tree/master/proto/mortar.proto) in a simple package.
