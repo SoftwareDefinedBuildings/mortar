@@ -53,6 +53,9 @@ push: container client-container
 push-mortar: container
 	docker push mortar/$(APP):$(RELEASE)
 
+push-frontend: frontend-container
+	docker push mortar/frontend:latest
+
 build:
 	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go build -o mortar
 
