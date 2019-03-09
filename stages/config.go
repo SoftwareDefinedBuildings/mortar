@@ -1,4 +1,4 @@
-package main
+package stages
 
 import (
 	"github.com/spf13/viper"

@@ -1,4 +1,4 @@
-package main
+package stages
 
 import (
 	"context"
@@ -51,4 +51,22 @@ type Stage interface {
 	// blocks on internal channel until next "Context" is ready
 	GetQueue() chan Context
 	String() string
+}
+
+func Showtime(queue chan Context) {
+	go func() {
+		log.Println("get output")
+		for out := range queue {
+			if out.response == nil {
+				if out.done != nil {
+					close(out.done)
+				}
+				if out.qualify_done != nil {
+					close(out.qualify_done)
+				}
+			} else {
+				out.done <- out.response
+			}
+		}
+	}()
 }

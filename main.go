@@ -3,51 +3,22 @@ package main
 import (
 	"context"
 	"errors"
+	"git.sr.ht/~gabe/mortar/stages"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/profile"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	dto "github.com/prometheus/client_model/go"
 	logrus "github.com/sirupsen/logrus"
 	"net/http"
-	"time"
+	"os"
 )
 
-var (
-	qualifyQueriesProcessed = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "qualify_queries_processed",
-		Help: "total number of processed Qualify queries",
-	})
-	fetchQueriesProcessed = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "fetch_queries_processed",
-		Help: "total number of processed Fetch queries",
-	})
-	messagesSent = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "msgs_sent",
-		Help: "total number of sent messages",
-	})
-	qualifyProcessingTimes = promauto.NewSummary(prometheus.SummaryOpts{
-		Name: "qualify_processing_time_milliseconds",
-		Help: "amount of time it takes to process a qualify query",
-	})
-	fetchProcessingTimes = promauto.NewSummary(prometheus.SummaryOpts{
-		Name: "fetch_processing_time_milliseconds",
-		Help: "amount of time it takes to process a fetch query",
-	})
-	authRequests = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "auth_requests_received",
-		Help: "number of authentication requests we get",
-	})
-	authRequestsSuccessful = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "successful_auth_requests_received",
-		Help: "number of authentication requests we get that are successful",
-	})
-	activeQueries = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "active_queries",
-		Help: "number of actively processed queries",
-	})
-)
+var log = logrus.New()
+
+func init() {
+	log.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, ForceColors: true})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(logrus.DebugLevel)
+}
 
 func main() {
 	doCPUprofile := false
@@ -58,65 +29,6 @@ func main() {
 	if doBlockprofile {
 		defer profile.Start(profile.BlockProfile, profile.ProfilePath(".")).Stop()
 	}
-
-	// monitor the prometheus metrics and print them out periodically
-	go func() {
-		var (
-			qualifyQueriesProcessed_old float64 = 0
-			fetchQueriesProcessed_old   float64 = 0
-			messagesSent_old            float64 = 0
-			authRequests_old            float64 = 0
-			authRequestsSuccessful_old  float64 = 0
-		)
-
-		var f = make(logrus.Fields)
-		for range time.Tick(30 * time.Second) {
-			var m dto.Metric
-
-			if err := qualifyQueriesProcessed.Write(&m); err != nil {
-				panic(err)
-			} else {
-				f["#qualify"] = *m.Counter.Value - qualifyQueriesProcessed_old
-				qualifyQueriesProcessed_old = *m.Counter.Value
-			}
-
-			if err := fetchQueriesProcessed.Write(&m); err != nil {
-				panic(err)
-			} else {
-				f["#fetch"] = *m.Counter.Value - fetchQueriesProcessed_old
-				fetchQueriesProcessed_old = *m.Counter.Value
-			}
-
-			if err := messagesSent.Write(&m); err != nil {
-				panic(err)
-			} else {
-				f["#msg"] = *m.Counter.Value - messagesSent_old
-				messagesSent_old = *m.Counter.Value
-			}
-
-			if err := authRequests.Write(&m); err != nil {
-				panic(err)
-			} else {
-				f["#auth raw"] = *m.Counter.Value - authRequests_old
-				authRequests_old = *m.Counter.Value
-			}
-
-			if err := authRequestsSuccessful.Write(&m); err != nil {
-				panic(err)
-			} else {
-				f["#auth good"] = *m.Counter.Value - authRequestsSuccessful_old
-				authRequestsSuccessful_old = *m.Counter.Value
-			}
-
-			if err := activeQueries.Write(&m); err != nil {
-				panic(err)
-			} else {
-				f["#active"] = *m.Gauge.Value
-			}
-
-			log.WithFields(f).Info(">")
-		}
-	}()
 
 	maincontext, cancel := context.WithCancel(context.Background())
 
@@ -148,7 +60,7 @@ func main() {
 
 	//loadgen_stage := NewSimpleLoadGenStage(makectx1)
 	//testcognito()
-	cfg, err := ReadConfig("mortarconfig.yml")
+	cfg, err := stages.ReadConfig("mortarconfig.yml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -172,64 +84,66 @@ func main() {
 		}
 	}()
 
-	frontend_stage_cfg := &ApiFrontendBasicStageConfig{
+	frontend_stage_cfg := &stages.ApiFrontendBasicStageConfig{
 		StageContext: maincontext,
 		ListenAddr:   cfg.ListenAddr,
 		AuthConfig:   cfg.Cognito,
 		TLSCrtFile:   cfg.TLSCrtFile,
 		TLSKeyFile:   cfg.TLSKeyFile,
 	}
-	frontend_stage, err := NewApiFrontendBasicStage(frontend_stage_cfg)
+	frontend_stage, err := stages.NewApiFrontendBasicStage(frontend_stage_cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	md_stage_cfg := &BrickQueryStageConfig{
+	md_stage_cfg := &stages.BrickQueryStageConfig{
 		Upstream:          frontend_stage,
 		StageContext:      maincontext,
 		HodConfigLocation: cfg.HodConfig,
 	}
 
-	md_stage, err := NewBrickQueryStage(md_stage_cfg)
+	md_stage, err := stages.NewBrickQueryStage(md_stage_cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 	brickready = true
 
-	ts_stage_cfg := &TimeseriesStageConfig{
+	ts_stage_cfg := &stages.TimeseriesStageConfig{
 		Upstream:     md_stage,
 		StageContext: maincontext,
 		BTrDBAddress: cfg.BTrDBAddr,
 	}
-	ts_stage, err := NewTimeseriesQueryStage(ts_stage_cfg)
+	ts_stage, err := stages.NewTimeseriesQueryStage(ts_stage_cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	_ = ts_stage
 
-	var end Stage = ts_stage
+	var end stages.Stage = ts_stage
 	for end != nil {
 		log.Println(end)
 		end = end.GetUpstream()
 	}
 
-	go func() {
-		log.Println("get output")
-		c := ts_stage.GetQueue()
-		for out := range c {
-			if out.response == nil {
-				if out.done != nil {
-					close(out.done)
-				}
-				if out.qualify_done != nil {
-					close(out.qualify_done)
-				}
-			} else {
-				out.done <- out.response
-			}
-		}
-	}()
+	stages.Showtime(ts_stage.GetQueue())
+
+	//	go func() {
+	//		log.Println("get output")
+	//		c := ts_stage.GetQueue()
+	//		for out := range c {
+	//			if out.response == nil {
+	//				if out.done != nil {
+	//					close(out.done)
+	//				}
+	//				if out.qualify_done != nil {
+	//					close(out.qualify_done)
+	//				}
+	//			} else {
+	//				out.done <- out.response
+	//			}
+	//		}
+	//	}()
 
 	select {}
 	cancel()
