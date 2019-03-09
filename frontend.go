@@ -151,7 +151,7 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 	select {
 	case stage.output <- queryCtx:
 	case <-ctx.Done():
-		return nil, errors.New("timeout")
+		return nil, errors.Wrap(ctx.Err(), "qualify timeout on dispatching query")
 	}
 
 	select {
@@ -162,7 +162,7 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 		}
 		return resp, nil
 	case <-ctx.Done():
-		return nil, errors.New("timeout")
+		return nil, errors.Wrap(ctx.Err(), "qualify timeout on getting query response")
 	}
 
 	return nil, errors.New("impossible error")
@@ -211,7 +211,7 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	case sem := <-stage.sem:
 		defer func() { stage.sem <- sem }()
 	case <-ctx.Done():
-		return errors.New("timeout")
+		return errors.Wrap(ctx.Err(), "fetch timeout on getting semaphore")
 	}
 
 	responseChan := make(chan *mortarpb.FetchResponse)
@@ -242,7 +242,7 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 					messagesSent.Inc()
 				}
 			case <-ctx.Done():
-				err = errors.New("timeout")
+				err = errors.Wrap(ctx.Err(), "fetch timeout on response")
 				break sendloop
 			}
 		}
