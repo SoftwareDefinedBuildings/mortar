@@ -235,10 +235,12 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 					// we have an error on sending, so we tear it all down
 					log.Error(errors.Wrap(err, "Error on sending"))
 					// have to remember to call cancel() here
+					finishResponse(resp)
 					cancel()
 					break sendloop
 				} else {
 					// happy path
+					finishResponse(resp)
 					messagesSent.Inc()
 				}
 			case <-ctx.Done():

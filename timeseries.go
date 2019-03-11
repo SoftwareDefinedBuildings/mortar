@@ -195,10 +195,12 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 				rawpoints, generations, errchan := stream.RawValues(ctx.ctx, start_time.UnixNano(), end_time.UnixNano(), 0)
 				resp := &mortarpb.FetchResponse{}
 				var pcount = 0
+				resp.Times = getTimeBuffer()
+				resp.Values = getValueBuffer()
 				for p := range rawpoints {
+					resp.Times[pcount] = p.Time
+					resp.Values[pcount] = p.Value
 					pcount += 1
-					resp.Times = append(resp.Times, p.Time)
-					resp.Values = append(resp.Values, p.Value)
 					if pcount == TS_BATCH_SIZE {
 						resp.Variable = reqstream.Name
 						resp.Identifier = uuStr
@@ -211,6 +213,8 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 				if len(resp.Times) > 0 {
 					resp.Variable = reqstream.Name
 					resp.Identifier = uuStr
+					resp.Times = resp.Times[:pcount]
+					resp.Values = resp.Values[:pcount]
 					ctx.response = resp
 					stage.output <- ctx
 				}
@@ -233,11 +237,14 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 
 				resp := &mortarpb.FetchResponse{}
 				var pcount = 0
-				for p := range statpoints {
-					pcount += 1
-					resp.Times = append(resp.Times, p.Time)
 
-					resp.Values = append(resp.Values, valueFromAggFunc(p, reqstream.Aggregation))
+				resp.Times = getTimeBuffer()
+				resp.Values = getValueBuffer()
+
+				for p := range statpoints {
+					resp.Times[pcount] = p.Time
+					resp.Values[pcount] = valueFromAggFunc(p, reqstream.Aggregation)
+					pcount += 1
 
 					if pcount == TS_BATCH_SIZE {
 						resp.Variable = reqstream.Name
@@ -251,6 +258,8 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 				if len(resp.Times) > 0 {
 					resp.Variable = reqstream.Name
 					resp.Identifier = uuStr
+					resp.Times = resp.Times[:pcount]
+					resp.Values = resp.Values[:pcount]
 					ctx.response = resp
 					stage.output <- ctx
 				}
@@ -432,4 +441,37 @@ func valueFromAggFunc(point btrdb.StatPoint, aggfunc mortarpb.AggFunc) float64 {
 		return float64(point.Count) * point.Mean
 	}
 	return point.Mean
+}
+
+var timeBufferPool = sync.Pool{
+	New: func() interface{} {
+		return make([]int64, TS_BATCH_SIZE)
+	},
+}
+
+func getTimeBuffer() []int64 {
+	return timeBufferPool.Get().([]int64)
+}
+
+func putTimeBuffer(buf []int64) {
+	timeBufferPool.Put(buf)
+}
+
+var valueBufferPool = sync.Pool{
+	New: func() interface{} {
+		return make([]float64, TS_BATCH_SIZE)
+	},
+}
+
+func getValueBuffer() []float64 {
+	return valueBufferPool.Get().([]float64)
+}
+
+func putValueBuffer(buf []float64) {
+	valueBufferPool.Put(buf)
+}
+
+func finishResponse(resp *mortarpb.FetchResponse) {
+	putValueBuffer(resp.Values)
+	putTimeBuffer(resp.Times)
 }

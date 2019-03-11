@@ -11,6 +11,7 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	logrus "github.com/sirupsen/logrus"
 	"net/http"
+	"runtime"
 	"time"
 )
 
@@ -51,13 +52,8 @@ var (
 
 func main() {
 	doCPUprofile := false
-	if doCPUprofile {
-		defer profile.Start(profile.CPUProfile, profile.ProfilePath(".")).Stop()
-	}
 	doBlockprofile := false
-	if doBlockprofile {
-		defer profile.Start(profile.BlockProfile, profile.ProfilePath(".")).Stop()
-	}
+	doMemprofile := false
 
 	// monitor the prometheus metrics and print them out periodically
 	go func() {
@@ -113,6 +109,12 @@ func main() {
 			} else {
 				f["#active"] = *m.Gauge.Value
 			}
+
+			//var rtm runtime.MemStats
+			//runtime.ReadMemStats(&rtm)
+			f["#goroutines"] = runtime.NumGoroutine()
+			//f["total_alloc"] = rtm.TotalAlloc / 1e6
+			//f["alloc"] = rtm.Alloc / 1e6
 
 			log.WithFields(f).Info(">")
 		}
@@ -212,6 +214,16 @@ func main() {
 	for end != nil {
 		log.Println(end)
 		end = end.GetUpstream()
+	}
+
+	if doCPUprofile {
+		defer profile.Start(profile.CPUProfile, profile.ProfilePath(".")).Stop()
+	}
+	if doBlockprofile {
+		defer profile.Start(profile.BlockProfile, profile.ProfilePath(".")).Stop()
+	}
+	if doMemprofile {
+		defer profile.Start(profile.MemProfile, profile.ProfilePath(".")).Stop()
 	}
 
 	go func() {
