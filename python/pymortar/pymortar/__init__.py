@@ -87,6 +87,7 @@ class Client:
             self._refresh()
 
     def _refresh(self):
+        logging.info("Generating a new JWT token. Your old token may have expired")
         response = self._client.GetAPIKey(mortar_pb2.GetAPIKeyRequest(username=self._cfg["username"],password=self._cfg["password"]))
         #print(response)
         self._token = response.token
@@ -126,12 +127,20 @@ class Client:
                 raise e
 
         res = Result()
-        for x in resp:
-            if x.error != "":
-                logging.error(x.error)
-                break
-            #res.add(x)
-            res.add2(x)
+        # TODO: we can get a token expiry error here
+        try:
+            for x in resp:
+                if x.error != "":
+                    logging.error(x.error)
+                    break
+                #res.add(x)
+                res.add2(x)
+        except Exception as e:
+            if e.details() == 'parse jwt token err: Token is expired':
+                self._refresh()
+                return self.fetch(request)
+            else:
+                raise e
         res.build()
         return res
 
