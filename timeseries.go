@@ -429,11 +429,23 @@ func ParseDuration(expr string) (time.Duration, error) {
 func valueFromAggFunc(point btrdb.StatPoint, aggfunc mortarpb.AggFunc) float64 {
 	switch aggfunc {
 	case mortarpb.AggFunc_AGG_FUNC_MEAN:
-		return point.Mean
+		if point.Count > 0 {
+			return point.Mean
+		} else {
+			return math.NaN()
+		}
 	case mortarpb.AggFunc_AGG_FUNC_MIN:
-		return point.Min
+		if point.Count > 0 {
+			return point.Min
+		} else {
+			return math.NaN()
+		}
 	case mortarpb.AggFunc_AGG_FUNC_MAX:
-		return point.Max
+		if point.Count > 0 {
+			return point.Max
+		} else {
+			return math.NaN()
+		}
 	case mortarpb.AggFunc_AGG_FUNC_COUNT:
 		return float64(point.Count)
 	case mortarpb.AggFunc_AGG_FUNC_SUM:
