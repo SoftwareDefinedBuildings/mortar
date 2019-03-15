@@ -358,7 +358,6 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 				for p := range statpoints {
 					pcount += 1
 					resp.Times = append(resp.Times, p.Time)
-
 					resp.Values = append(resp.Values, valueFromAggFunc(p, dataFrame.Aggregation))
 
 					if pcount == TS_BATCH_SIZE {

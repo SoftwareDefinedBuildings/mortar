@@ -20,7 +20,7 @@ func init() {
 
 var (
 	unauthorizedErr = errors.New("Unauthorized")
-	requestTimeout  = 15 * time.Minute
+	requestTimeout  = 60 * time.Minute
 )
 
 type ApiFrontendBasicStage struct {
@@ -84,7 +84,13 @@ func NewApiFrontendBasicStage(cfg *ApiFrontendBasicStageConfig) (*ApiFrontendBas
 		return nil, errors.Wrapf(err, "Could not listen on address %s", cfg.ListenAddr)
 	}
 	mortarpb.RegisterMortarServer(server, stage)
-	go server.Serve(l)
+	go func() {
+		for {
+			e := server.Serve(l)
+			log.Error(errors.Wrap(e, "Error GRPC serving. Restarting in 10 sec"))
+			time.Sleep(10 * time.Second)
+		}
+	}()
 	log.Infof("Listening GRPC on %s", cfg.ListenAddr)
 
 	return stage, nil
@@ -111,7 +117,10 @@ func (stage *ApiFrontendBasicStage) String() string {
 func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortarpb.QualifyRequest) (*mortarpb.QualifyResponse, error) {
 
 	t := time.Now()
-	defer qualifyProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
+	defer func() {
+		log.Info("Qualify took ", time.Since(t))
+		qualifyProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
+	}()
 
 	activeQueries.Inc()
 	defer activeQueries.Dec()
