@@ -58,6 +58,35 @@ class Client:
         else:
             self._mortar_address = self._cfg.get('mortar_address')
 
+        self._connect()
+
+        def connectivity_event_callback(event):
+            if event == grpc.ChannelConnectivity.IDLE:
+                logging.info("Idle channel")
+            elif event == grpc.ChannelConnectivity.TRANSIENT_FAILURE:
+                logging.error("Transient failure detected; reconnecting in 10 sec")
+                time.sleep(10)
+                self._connect()
+            else:
+                logging.info("Got event {0}".format(event))
+
+        # listen to channel events
+        self._channel.subscribe(connectivity_event_callback)
+
+        if os.path.exists(".pymortartoken.json"):
+            self._token = json.load(open(".pymortartoken.json", "r"))
+            logging.info("loaded .pymortartoken.json token")
+        else:
+            self._token = None
+
+        # TODO: handle the refresh token recycling automatically for the user
+        # TODO: break this out into a method that can be called when we notice that the token is expired
+
+        # FIX: comment this out to allow token to expire and see connection state
+        if self._token is None:
+            self._refresh()
+
+    def _connect(self):
         # setup GRPC client: gzip + tls
         if self._cfg.get('abandon_all_tls') == "yes i'm sure":
             print('insecure')
@@ -72,19 +101,6 @@ class Client:
 
         self._client = mortar_pb2_grpc.MortarStub(self._channel)
 
-        # TODO: check if a .pymortartoken.json file exists. If it does, then use the token
-        # and don't do the username/password login
-
-        if os.path.exists(".pymortartoken.json"):
-            self._token = json.load(open(".pymortartoken.json", "r"))
-            #print("loaded token: {0}".format(self._token))
-        else:
-            self._token = None
-
-        # TODO: handle the refresh token recycling automatically for the user
-        # TODO: break this out into a method that can be called when we notice that the token is expired
-        if self._token is None:
-            self._refresh()
 
     def _refresh(self):
         logging.info("Generating a new JWT token. Your old token may have expired")
