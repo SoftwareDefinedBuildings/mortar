@@ -1,7 +1,7 @@
 __version__ = '0.1.0'
 from pymortar import mortar_pb2
 from pymortar import mortar_pb2_grpc
-from pymortar.result import Result
+from pymortar.result import Result as Result
 
 from pymortar.mortar_pb2 import GetAPIKeyRequest, FetchRequest, QualifyRequest, Stream, TimeParams, Timeseries, View, DataFrame
 
@@ -21,25 +21,19 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 class Client:
-    """
-    Mortar client
+    """Method to create a new Pymortar client
 
-    Parameters
-    ----------
-    cfg: dict
-        Contains the configuration information for connecting to the Mortar API.
-        Expects the following keys:
+    The configuration takes the following (optional) parameters:
 
-        mortar_address: address + port to connect to, e.g. "localhost:9001".
-                        Defaults to $MORTAR_API_ADDRESS from the environment.
-                        Currently expects a TLS-secured endpoint
-        username: your Mortar API username. Defaults to MORTAR_API_USERNAME env var
-        password: your Mortar API password. Defaults to MORTAR_API_PASSWORD env var
+    - mortar_address: address + port to connect to, e.g. "localhost:9001". Defaults to $MORTAR_API_ADDRESS from the environment. Currently expects a TLS-secured endpoint
+    - username: your Mortar API username. Defaults to MORTAR_API_USERNAME env var
+    - password: your Mortar API password. Defaults to MORTAR_API_PASSWORD env var
 
-    Returns
-    -------
-    client: Client
-        An instance of the Mortar Client.
+    Keyword Args:
+        cfg (dict or None): configuration dictionary. Takes the following (optional) keys:
+
+    Returns:
+        client (Client): PyMortar client
     """
     def __init__(self, cfg=None):
         if cfg is not None:
@@ -112,24 +106,11 @@ class Client:
         """
         Calls the Mortar API Fetch command
 
-        Parameters
-        ----------
-        req: mortar_pb2.FetchRequest
-            TODO: need to document the fetch request parameters
+        Args:
+            req (mortar_pb2.FetchRequest): definition of the dataset.
 
-            sites: list of strings
-                Each string is a site name. These can be found through the qualify() API call
-
-            time: TimeParams
-                Defines the temporal parameters for the data query
-
-        Returns
-        -------
-        resp: pandas.DataFrame
-            The column names are the UUIDs either explicitly annotated in the request or
-            found through the Stream definitions
-
-            TODO: figure out how to add in the metadata component
+        Returns:
+            result (Result): The result object containing the desired metadata and timeseries data
         """
         try:
             resp = self._client.Fetch(request, metadata=[('token', self._token)])
@@ -161,15 +142,11 @@ class Client:
         """
         Calls the Mortar API Qualify command
 
-        Parameters
-        ----------
-        required_queries: list of str
-            list of queries we want to use to filter sites
+        Args:
+            required_queries (list of str): list of queries we want to use to filter sites
 
         Returns
-        -------
-        sites: list of str
-            List of site names to be used in a subsequent fetch command
+            sites (list of str): List of site names to be used in a subsequent fetch command
         """
         try:
             resp = self._client.Qualify(QualifyRequest(required=required_queries), metadata=[('token', self._token)])

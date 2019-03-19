@@ -3,13 +3,13 @@ import time
 import pandas as pd
 
 
-def format_uri(uri):
+def _format_uri(uri):
     if uri.namespace:
         return uri.namespace+"#"+uri.value
     else:
         return uri.value.strip('"')
 
-def make_table(_conn, tablename, varnames):
+def _make_table(_conn, tablename, varnames):
     c = _conn.cursor()
     colnames = []
     for varname in varnames:
@@ -19,17 +19,13 @@ def make_table(_conn, tablename, varnames):
     return _conn
 
 """
-The result object helps pymortar build from streaming responses to a query,
-and provides an interface to look at both metadata and timeseries data that
-is the output of a call to Fetch(...)
 """
 class Result:
     def __init__(self):
         """
-        Returns
-        -------
-        o: Result
-            A Result object
+        The result object helps pymortar build from streaming responses to a query,
+        and provides an interface to look at both metadata and timeseries data that
+        is the output of a call to Fetch(...)
         """
 
         # result object has its own sqlite3 in-memory database
@@ -57,14 +53,9 @@ class Result:
         """
         Prints out a description of the table with the provided name
 
-        Parameters
-        ----------
-        viewname: string
-            Table name. This will be from the pymortar.Stream object 'name' field. List can be retrieved using Result.tables()
-
-        Returns
-        -------
-        n/a (prints out result)
+        Args:
+            viewname (str): The name of the view you want to see a description of. A list of views
+                can be retrieved using Result.views
         """
         s = "Columns: {0}".format(' '.join(self._tables.get(viewname, [])))
         s += "\nCount: {0}".format(self.query("SELECT COUNT(*) FROM {0}".format(viewname))[0][0])
@@ -72,36 +63,31 @@ class Result:
 
     def view_columns(self, viewname):
         """
-        Prints out a description of the table with the provided name
+        Returns a Python list of strings corresponding to the column names of the given View
 
-        Parameters
-        ----------
-        viewname: string
-            View name. This will be from the pymortar.View object 'name' field. 
+        Args:
+            viewname (str): View name. This will be from the pymortar.View object 'name' field.
             List can be retrieved using the Result.views property
 
-        Returns
-        -------
-        l: list of strings
+        Returns:
+            columns: list of str
         """
         return self._tables.get(viewname, [])
 
     def view(self, viewname, fulluri=False):
         """
-        Prints out a description of the table with the provided name
+        Returns a pandas.DataFrame representation of the indicated view.
 
-        Parameters
-        ----------
-        viewname: string
-            View name. This will be from the pymortar.View object 'name' field. 
-            List can be retrieved using the Result.views property
-        fulluri: bool (default: False)
-            if True, returns the full URI of the Brick value. this can be
-            cumbersome, so the default is to elide these prefixes
+        Args:
+            viewname (str): View name. This will be from the pymortar.View object 'name' field.
+                List can be retrieved using the Result.views property
 
-        Returns
-        -------
-        DataFrame representation of view
+        Keyword Args:
+            fulluri (bool): (default: False) if True, returns the full URI of the Brick value.
+                This can be cumbersome, so the default is to elide these prefixes
+
+        Returns:
+            df: pandas.DataFrame
         """
         cols = self.view_columns(viewname)
         col_str = ", ".join(cols)
@@ -126,13 +112,13 @@ class Result:
         if resp.error != "":
             raise Exception(resp.error)
         if resp.view not in self._tables and len(resp.variables) > 0:
-            make_table(self.conn, resp.view, resp.variables)
+            _make_table(self.conn, resp.view, resp.variables)
             self._tables[resp.view] = list(map(lambda x: x.lstrip("?"), resp.variables))
             self._tables[resp.view].append("site")
         if resp.view in self._tables:
             c = self.conn.cursor()
             for row in resp.rows:
-                values = ['"{0}"'.format(format_uri(u)) for u in row.values]
+                values = ['"{0}"'.format(_format_uri(u)) for u in row.values]
                 values.append('"{0}"'.format(resp.site))
                 c.execute("INSERT INTO {0} values ({1})".format(resp.view, ", ".join(values)))
 
@@ -146,7 +132,7 @@ class Result:
             )
 
 
-    def build(self):
+    def _build(self):
         if len(self._dataframes) == 0:
             self._df = pd.DataFrame()
             return
@@ -167,16 +153,25 @@ class Result:
         if key not in self._dataframes:
             return None
         if key not in self._dfs:
-            self.build()
+            self._build()
         return self._dfs[key]
 
     def __contains__(self, key):
         return key in self._dataframes
 
-    def get(self, key, default=None):
+    def get(self, name, default=None):
+        """
+        Returns the DataFrame with the given name
+
+        Args:
+            name (str): name of the DataFrame from your FetchRequest
+
+        Returns:
+            df: pandas.DataFrame
+        """
         if key not in self._dataframes:
             return default
-        return self[key]
+        return self[name]
 
     @property
     def views(self):
@@ -184,10 +179,8 @@ class Result:
         Returns the list of views in this result. Access views as SQL
         tables using Result.query("select * from {view name}")
 
-        Returns
-        -------
-        l: list of str
-          view names
+        Returns:
+            names: list of str
         """
         return self.tables
 
@@ -197,10 +190,8 @@ class Result:
         Returns the list of dataframes in this result. Access dataframes using
         Result['dataframe name'] or Result.get('dataframe name')
 
-        Returns
-        -------
-        l: list of str
-          dataframe names
+        Returns:
+            names: list of str
         """
         return list(self._dataframes.keys())
 
@@ -208,31 +199,24 @@ class Result:
     @property
     def tables(self):
         """
-        Returns a list of the table names, containing the retrieved metadata
+        Returns the list of views in this result. Access views as SQL
+        tables using Result.query("select * from {view name}")
 
-        Returns
-        -------
-        l: list of string
-            Each string is a table name
+        Returns:
+            names: list of str
         """
         return list(self._tables.keys())
 
-    def vars(self, table):
-        """
-        Returns a lsit of the column names for the given table
-
-        Parameters
-        ----------
-        viewname: string
-            Name of the table
-
-        Returns
-        -------
-        l: list of string
-            Column names of the table
-        """
-        return self._tables.get(table, [])
-
     def query(self, q):
+        """
+        Returns the result of a SQL query executed against the in-memory
+        SQLite database of views returned by the query
+
+        Args:
+            query (str): SQL query.  Names of the tables are the names of the views
+
+        Returns:
+            results: list of query results
+        """
         c = self.conn.cursor()
         return list(c.execute(q))
