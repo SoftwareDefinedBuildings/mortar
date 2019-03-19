@@ -53,24 +53,66 @@ class Result:
         ]
         return "<pymortar.result.Result: {0}>".format(" ".join(values))
 
-    def describe_table(self, tablename):
+    def describe_table(self, viewname):
         """
         Prints out a description of the table with the provided name
 
         Parameters
         ----------
-        tablename: string
+        viewname: string
             Table name. This will be from the pymortar.Stream object 'name' field. List can be retrieved using Result.tables()
 
         Returns
         -------
         n/a (prints out result)
         """
-        s = "Columns: {0}".format(' '.join(self._tables.get(tablename, [])))
-        s += "\nCount: {0}".format(self.query("SELECT COUNT(*) FROM {0}".format(tablename))[0][0])
+        s = "Columns: {0}".format(' '.join(self._tables.get(viewname, [])))
+        s += "\nCount: {0}".format(self.query("SELECT COUNT(*) FROM {0}".format(viewname))[0][0])
         print(s)
 
-    def add2(self, resp):
+    def view_columns(self, viewname):
+        """
+        Prints out a description of the table with the provided name
+
+        Parameters
+        ----------
+        viewname: string
+            View name. This will be from the pymortar.View object 'name' field. 
+            List can be retrieved using the Result.views property
+
+        Returns
+        -------
+        l: list of strings
+        """
+        return self._tables.get(viewname, [])
+
+    def view(self, viewname, fulluri=False):
+        """
+        Prints out a description of the table with the provided name
+
+        Parameters
+        ----------
+        viewname: string
+            View name. This will be from the pymortar.View object 'name' field. 
+            List can be retrieved using the Result.views property
+        fulluri: bool (default: False)
+            if True, returns the full URI of the Brick value. this can be
+            cumbersome, so the default is to elide these prefixes
+
+        Returns
+        -------
+        DataFrame representation of view
+        """
+        cols = self.view_columns(viewname)
+        col_str = ", ".join(cols)
+        df = pd.DataFrame(self.query("select {0} from {1}".format(col_str, viewname)))
+        df.columns = cols
+        if not fulluri:
+            for col in cols:
+                df.loc[:, col] = df[col].str.split('#').apply(lambda x: x[-1])
+        return df
+
+    def _add(self, resp):
         """
         Adds the next FetchResponse object from the streaming call into
         the current Result object
@@ -103,42 +145,6 @@ class Result:
                 pd.Series(resp.values, index=pd.to_datetime(resp.times), name=resp.identifier)
             )
 
-
-    def add(self, resp):
-        """
-        Adds the next FetchResponse object from the streaming call into
-        the current Result object
-
-        Parameters
-        ----------
-        resp: FetchResponse
-            This parameter is a FetchResponse object obtained from
-            calling the Mortar Fetch() call.
-        """
-
-        if resp.error != "":
-            raise Exception(resp.error)
-
-
-        if resp.variable not in self._tables and len(resp.variables) > 0:
-            make_table(self.conn, resp.variable, resp.variables)
-            self._tables[resp.variable] = list(map(lambda x: x.lstrip("?"), resp.variables))
-            self._tables[resp.variable].append("site")
-
-        if resp.variable in self._tables:
-            c = self.conn.cursor()
-            for row in resp.rows:
-                values = ['"{0}"'.format(format_uri(u)) for u in row.values]
-                values.append('"{0}"'.format(resp.site))
-                c.execute("INSERT INTO {0} values ({1})".format(resp.variable, ", ".join(values)))
-
-        # SELECT * FROM sqlite_master;
-        if resp.identifier:
-            if resp.identifier not in self._series:
-                self._series[resp.identifier] = []
-            self._series[resp.identifier].append(
-                pd.Series(resp.values, index=pd.to_datetime(resp.times), name=resp.identifier)
-            )
 
     def build(self):
         if len(self._dataframes) == 0:
@@ -215,7 +221,7 @@ class Result:
 
         Parameters
         ----------
-        tablename: string
+        viewname: string
             Name of the table
 
         Returns

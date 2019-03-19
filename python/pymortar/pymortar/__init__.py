@@ -147,8 +147,7 @@ class Client:
                 if x.error != "":
                     logging.error(x.error)
                     break
-                #res.add(x)
-                res.add2(x)
+                res._add(x)
         except Exception as e:
             if e.details() == 'parse jwt token err: Token is expired':
                 self._refresh()
