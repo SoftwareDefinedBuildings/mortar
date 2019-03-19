@@ -157,7 +157,9 @@ class Result:
                 ser = pd.concat(contents)
                 ser = ser[~ser.index.duplicated()]
                 self._dataframes[dataframe][uuidname] = ser
-            self._dfs[dataframe] = pd.concat(self._dataframes[dataframe].values(), axis=1, copy=False)
+            df = pd.concat(self._dataframes[dataframe].values(), axis=1, copy=False)
+            # localize to UTC time
+            self._dfs[dataframe] = df.set_index(df.index.tz_localize('UTC'))
         t2 = time.time()
         #print("Building DF took {0}".format(t2-t))
 
