@@ -61,9 +61,7 @@ class Client:
         self._connect()
 
         def connectivity_event_callback(event):
-            if event == grpc.ChannelConnectivity.IDLE:
-                logging.info("Idle channel")
-            elif event == grpc.ChannelConnectivity.TRANSIENT_FAILURE:
+            if event == grpc.ChannelConnectivity.TRANSIENT_FAILURE:
                 logging.error("Transient failure detected; reconnecting in 10 sec")
                 time.sleep(10)
                 self._connect()
