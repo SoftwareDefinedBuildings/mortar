@@ -226,19 +226,23 @@ func main() {
 		defer profile.Start(profile.MemProfile, profile.ProfilePath(".")).Stop()
 	}
 
+	//TODO: i think the problem is inside here
 	go func() {
 		log.Println("get output")
-		c := ts_stage.GetQueue()
-		for out := range c {
-			if out.response == nil {
-				if out.done != nil {
-					close(out.done)
+		processedContexts := ts_stage.GetQueue()
+		for queryCtx := range processedContexts {
+			if queryCtx.response == nil {
+				if queryCtx.done != nil {
+					close(queryCtx.done)
 				}
-				if out.qualify_done != nil {
-					close(out.qualify_done)
+				if queryCtx.qualify_done != nil {
+					close(queryCtx.qualify_done)
 				}
 			} else {
-				out.done <- out.response
+				select {
+				case queryCtx.done <- queryCtx.response:
+				case <-queryCtx.ctx.Done():
+				}
 			}
 		}
 	}()
