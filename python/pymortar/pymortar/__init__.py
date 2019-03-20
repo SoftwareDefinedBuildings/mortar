@@ -1,4 +1,4 @@
-__version__ = '1.0.3-a8'
+__version__ = '1.0.3'
 from pymortar import mortar_pb2
 from pymortar import mortar_pb2_grpc
 from pymortar.result import Result as Result
