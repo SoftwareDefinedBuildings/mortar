@@ -70,13 +70,14 @@ class Result:
             List can be retrieved using the Result.views property
 
         Returns:
-            columns: list of str
+            columns (list of str): the column names for the indicated view
         """
         return self._tables.get(viewname, [])
 
     def view(self, viewname, fulluri=False):
         """
-        Returns a pandas.DataFrame representation of the indicated view.
+        Returns a pandas.DataFrame representation of the indicated view. This is presented
+        as an alternative to writing SQL queries (Result.query)
 
         Args:
             viewname (str): View name. This will be from the pymortar.View object 'name' field.
@@ -87,7 +88,7 @@ class Result:
                 This can be cumbersome, so the default is to elide these prefixes
 
         Returns:
-            df: pandas.DataFrame
+            df (pandas.DataFrame): a DataFrame containing the results of the View
         """
         cols = self.view_columns(viewname)
         col_str = ", ".join(cols)
@@ -167,7 +168,7 @@ class Result:
             name (str): name of the DataFrame from your FetchRequest
 
         Returns:
-            df: pandas.DataFrame
+            df (pandas.DataFrame): DataFrame containing timeseries data
         """
         if key not in self._dataframes:
             return default
@@ -177,10 +178,10 @@ class Result:
     def views(self):
         """
         Returns the list of views in this result. Access views as SQL
-        tables using Result.query("select * from {view name}")
+        tables using `Result.query("select * from {view name}")`
 
         Returns:
-            names: list of str
+            names (list of str): list of names of views (from FetchRequest)
         """
         return self.tables
 
@@ -191,7 +192,7 @@ class Result:
         Result['dataframe name'] or Result.get('dataframe name')
 
         Returns:
-            names: list of str
+            names (list of str): list of names of dataframes (from FetchRequest)
         """
         return list(self._dataframes.keys())
 
@@ -200,10 +201,10 @@ class Result:
     def tables(self):
         """
         Returns the list of views in this result. Access views as SQL
-        tables using Result.query("select * from {view name}")
+        tables using `Result.query("select * from {view name}")`
 
         Returns:
-            names: list of str
+            names (list of str): list of names of views (from FetchRequest)
         """
         return list(self._tables.keys())
 
@@ -216,7 +217,7 @@ class Result:
             query (str): SQL query.  Names of the tables are the names of the views
 
         Returns:
-            results: list of query results
+            results (list of []str): list of query results; each row of the result is a list
         """
         c = self.conn.cursor()
         return list(c.execute(q))

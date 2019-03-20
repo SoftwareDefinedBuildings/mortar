@@ -1,4 +1,4 @@
-__version__ = '0.1.0'
+__version__ = '1.0.3-a8'
 from pymortar import mortar_pb2
 from pymortar import mortar_pb2_grpc
 from pymortar.result import Result as Result
@@ -135,7 +135,7 @@ class Client:
                 return self.fetch(request)
             else:
                 raise e
-        res.build()
+        res._build()
         return res
 
     def qualify(self, required_queries):
@@ -145,7 +145,7 @@ class Client:
         Args:
             required_queries (list of str): list of queries we want to use to filter sites
 
-        Returns
+        Returns:
             sites (list of str): List of site names to be used in a subsequent fetch command
         """
         try:
