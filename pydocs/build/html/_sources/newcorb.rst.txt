@@ -1,0 +1,7 @@
+newcorb module
+==============
+
+.. automodule:: newcorb
+    :members:
+    :undoc-members:
+    :show-inheritance:

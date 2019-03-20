@@ -1,0 +1,7 @@
+corbtest module
+===============
+
+.. automodule:: corbtest
+    :members:
+    :undoc-members:
+    :show-inheritance:

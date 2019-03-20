@@ -1,0 +1,7 @@
+localtest module
+================
+
+.. automodule:: localtest
+    :members:
+    :undoc-members:
+    :show-inheritance:
