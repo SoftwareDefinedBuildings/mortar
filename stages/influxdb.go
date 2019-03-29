@@ -108,8 +108,6 @@ func (stage *InfluxDBTimeseriesQueryStage) String() string {
 }
 
 func (stage *InfluxDBTimeseriesQueryStage) processQuery(ctx Context) error {
-	//	defer ctx.finish()
-	fmt.Printf("INFLUX %+v\n", ctx.request)
 	// parse timestamps for the query
 	start_time, err := time.Parse(time.RFC3339, ctx.request.Time.Start)
 	if err != nil {
