@@ -1,0 +1,467 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pymortar package &mdash; pymortar  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pymortar
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">pymortar package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-pymortar.mortar_pb2">pymortar.mortar_pb2 module</a></li>
+<li><a class="reference internal" href="#module-pymortar.mortar_pb2_grpc">pymortar.mortar_pb2_grpc module</a></li>
+<li><a class="reference internal" href="#module-pymortar.result">pymortar.result module</a></li>
+<li><a class="reference internal" href="#module-pymortar">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pymortar</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>pymortar package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/pymortar.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pymortar-package">
+<h1>pymortar package<a class="headerlink" href="#pymortar-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pymortar.mortar_pb2">
+<span id="pymortar-mortar-pb2-module"></span><h2>pymortar.mortar_pb2 module<a class="headerlink" href="#module-pymortar.mortar_pb2" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pymortar.mortar_pb2_grpc">
+<span id="pymortar-mortar-pb2-grpc-module"></span><h2>pymortar.mortar_pb2_grpc module<a class="headerlink" href="#module-pymortar.mortar_pb2_grpc" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pymortar.mortar_pb2_grpc.MortarServicer">
+<em class="property">class </em><code class="descclassname">pymortar.mortar_pb2_grpc.</code><code class="descname">MortarServicer</code><a class="headerlink" href="#pymortar.mortar_pb2_grpc.MortarServicer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="pymortar.mortar_pb2_grpc.MortarServicer.Fetch">
+<code class="descname">Fetch</code><span class="sig-paren">(</span><em>request</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.mortar_pb2_grpc.MortarServicer.Fetch" title="Permalink to this definition">¶</a></dt>
+<dd><p>pull data from Mortar</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymortar.mortar_pb2_grpc.MortarServicer.GetAPIKey">
+<code class="descname">GetAPIKey</code><span class="sig-paren">(</span><em>request</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.mortar_pb2_grpc.MortarServicer.GetAPIKey" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pymortar.mortar_pb2_grpc.MortarServicer.Qualify">
+<code class="descname">Qualify</code><span class="sig-paren">(</span><em>request</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.mortar_pb2_grpc.MortarServicer.Qualify" title="Permalink to this definition">¶</a></dt>
+<dd><p>identify which sites meet the requirements of the queries</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pymortar.mortar_pb2_grpc.MortarStub">
+<em class="property">class </em><code class="descclassname">pymortar.mortar_pb2_grpc.</code><code class="descname">MortarStub</code><span class="sig-paren">(</span><em>channel</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.mortar_pb2_grpc.MortarStub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymortar.mortar_pb2_grpc.add_MortarServicer_to_server">
+<code class="descclassname">pymortar.mortar_pb2_grpc.</code><code class="descname">add_MortarServicer_to_server</code><span class="sig-paren">(</span><em>servicer</em>, <em>server</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.mortar_pb2_grpc.add_MortarServicer_to_server" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-pymortar.result">
+<span id="pymortar-result-module"></span><h2>pymortar.result module<a class="headerlink" href="#module-pymortar.result" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pymortar.result.Result">
+<em class="property">class </em><code class="descclassname">pymortar.result.</code><code class="descname">Result</code><a class="headerlink" href="#pymortar.result.Result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="pymortar.result.Result.dataFrames">
+<code class="descname">dataFrames</code><a class="headerlink" href="#pymortar.result.Result.dataFrames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of dataframes in this result. Access dataframes using
+Result[‘dataframe name’] or Result.get(‘dataframe name’)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list of names of dataframes (from FetchRequest)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">names (list of str)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymortar.result.Result.describe_table">
+<code class="descname">describe_table</code><span class="sig-paren">(</span><em>viewname</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.result.Result.describe_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints out a description of the table with the provided name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>viewname</strong> (<em>str</em>) – The name of the view you want to see a description of. A list of views
+can be retrieved using Result.views</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymortar.result.Result.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>name</em>, <em>default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.result.Result.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the DataFrame with the given name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) – name of the DataFrame from your FetchRequest</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">DataFrame containing timeseries data</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">df (pandas.DataFrame)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymortar.result.Result.query">
+<code class="descname">query</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.result.Result.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the result of a SQL query executed against the in-memory
+SQLite database of views returned by the query</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>query</strong> (<em>str</em>) – SQL query.  Names of the tables are the names of the views</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of query results; each row of the result is a list</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">results (list of []str)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymortar.result.Result.tables">
+<code class="descname">tables</code><a class="headerlink" href="#pymortar.result.Result.tables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of views in this result. Access views as SQL
+tables using <cite>Result.query(“select * from {view name}”)</cite></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list of names of views (from FetchRequest)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">names (list of str)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymortar.result.Result.view">
+<code class="descname">view</code><span class="sig-paren">(</span><em>viewname</em>, <em>fulluri=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.result.Result.view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a pandas.DataFrame representation of the indicated view. This is presented
+as an alternative to writing SQL queries (Result.query)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>viewname</strong> (<em>str</em>) – View name. This will be from the pymortar.View object ‘name’ field.
+List can be retrieved using the Result.views property</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Keyword Arguments:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><strong>fulluri</strong> (<em>bool</em>) – (default: False) if True, returns the full URI of the Brick value.
+This can be cumbersome, so the default is to elide these prefixes</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a DataFrame containing the results of the View</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">df (pandas.DataFrame)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymortar.result.Result.view_columns">
+<code class="descname">view_columns</code><span class="sig-paren">(</span><em>viewname</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.result.Result.view_columns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Python list of strings corresponding to the column names of the given View</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>viewname</strong> (<em>str</em>) – View name. This will be from the pymortar.View object ‘name’ field.</li>
+<li><strong>can be retrieved using the Result.views property</strong> (<em>List</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the column names for the indicated view</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">columns (list of str)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymortar.result.Result.views">
+<code class="descname">views</code><a class="headerlink" href="#pymortar.result.Result.views" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of views in this result. Access views as SQL
+tables using <cite>Result.query(“select * from {view name}”)</cite></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list of names of views (from FetchRequest)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">names (list of str)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pymortar">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pymortar" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pymortar.Client">
+<em class="property">class </em><code class="descclassname">pymortar.</code><code class="descname">Client</code><span class="sig-paren">(</span><em>cfg=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.Client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Method to create a new Pymortar client</p>
+<p>The configuration takes the following (optional) parameters:</p>
+<ul class="simple">
+<li>mortar_address: address + port to connect to, e.g. “localhost:9001”. Defaults to $MORTAR_API_ADDRESS from the environment. Currently expects a TLS-secured endpoint</li>
+<li>username: your Mortar API username. Defaults to MORTAR_API_USERNAME env var</li>
+<li>password: your Mortar API password. Defaults to MORTAR_API_PASSWORD env var</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Keyword Arguments:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body"><strong>cfg</strong> (<em>dict</em><em> or </em><em>None</em>) – configuration dictionary. Takes the following (optional) keys:</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">PyMortar client</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">client (<a class="reference internal" href="#pymortar.Client" title="pymortar.Client">Client</a>)</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pymortar.Client.fetch">
+<code class="descname">fetch</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.Client.fetch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls the Mortar API Fetch command</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>req</strong> (<em>mortar_pb2.FetchRequest</em>) – definition of the dataset.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The result object containing the desired metadata and timeseries data</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">result (<a class="reference internal" href="#pymortar.result.Result" title="pymortar.result.Result">Result</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymortar.Client.qualify">
+<code class="descname">qualify</code><span class="sig-paren">(</span><em>required_queries</em><span class="sig-paren">)</span><a class="headerlink" href="#pymortar.Client.qualify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls the Mortar API Qualify command</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>required_queries</strong> (<em>list of str</em>) – list of queries we want to use to filter sites</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of site names to be used in a subsequent fetch command</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">sites (list of str)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Gabe Fierro
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

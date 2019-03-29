@@ -1,5 +1,5 @@
 APP?=mortar
-RELEASE?=1.0.6
+RELEASE?=1.0.8-a7
 MORTAR_REPOSITORY?=https://github.com/SoftwareDefinedBuildings/mortar-analytics
 .PHONY: proto frontend
 
@@ -14,11 +14,13 @@ client-container:
 	docker build -t mortar/pymortar-client:latest containers/pymortar-client
 
 frontend-container:
-	mkdocs build
+	tools/generate_docs.sh
 	mkdir -p containers/frontend/static/site
 	mkdir -p containers/frontend/static/login
 	mkdir -p containers/frontend/static/landing
+	mkdir -p containers/frontend/static/pydocs
 	cp -r site/* containers/frontend/static/site/
+	cp -r pydocs/build/html/* containers/frontend/static/pydocs/.
 	cp -r frontend/static/login/index.html containers/frontend/static/login/index.html
 	cp -r frontend/static/landing/* containers/frontend/static/landing/
 	go build -o containers/frontend/exec-frontend ./frontend
@@ -28,7 +30,7 @@ mortar-analytics:
 	git clone $(MORTAR_REPOSITORY) mortar-analytics
 
 frontend:
-	mkdocs build
+	tools/generate_docs.sh
 	cp -r site/ frontend/static/
 	go build -o frontend/exec-frontend ./frontend
 	cd frontend && ./exec-frontend

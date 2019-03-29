@@ -19,7 +19,7 @@ func validateFetchRequest(req *mortarpb.FetchRequest) error {
 	//	return errors.New("Need to include non-empty request.Streams")
 	//}
 
-	hasWindowAgg := false
+	//hasWindowAgg := false
 	for idx, stream := range req.Streams {
 		// streams must have a name
 		if stream.Name == "" {
@@ -37,28 +37,30 @@ func validateFetchRequest(req *mortarpb.FetchRequest) error {
 		if stream.Aggregation == mortarpb.AggFunc_AGG_FUNC_INVALID {
 			return fmt.Errorf("Stream %d has no aggregation function (can be RAW)", idx)
 		}
-		if stream.Aggregation != mortarpb.AggFunc_AGG_FUNC_RAW {
-			hasWindowAgg = true
-		}
+		//if stream.Aggregation != mortarpb.AggFunc_AGG_FUNC_RAW {
+		//	hasWindowAgg = true
+		//}
 
 		// TODO: check units?
 	}
 
 	// check time params
-	if req.Time == nil {
+	if len(req.DataFrames) > 0 && req.Time == nil {
 		return errors.New("Need to include non-empty request.Time")
 	}
 
-	// parse the times to check
-	if _, err := time.Parse(time.RFC3339, req.Time.Start); err != nil {
-		return errors.Wrapf(err, "request.Time.Start is not RFC3339-formatted timestamp (%s)", req.Time.Start)
-	}
-	if _, err := time.Parse(time.RFC3339, req.Time.End); err != nil {
-		return errors.Wrapf(err, "request.Time.End is not RFC3339-formatted timestamp (%s)", req.Time.End)
-	}
+	if req.Time != nil {
+		// parse the times to check
+		if _, err := time.Parse(time.RFC3339, req.Time.Start); err != nil {
+			return errors.Wrapf(err, "request.Time.Start is not RFC3339-formatted timestamp (%s)", req.Time.Start)
+		}
+		if _, err := time.Parse(time.RFC3339, req.Time.End); err != nil {
+			return errors.Wrapf(err, "request.Time.End is not RFC3339-formatted timestamp (%s)", req.Time.End)
+		}
 
-	if hasWindowAgg && req.Time.Window == "" {
-		return errors.New("One of your stream uses a windowed aggregation function e.g. MEAN. Need to provide a valid request.Time.Window")
+		//if hasWindowAgg && req.Time.Window == "" {
+		//	return errors.New("One of your stream uses a windowed aggregation function e.g. MEAN. Need to provide a valid request.Time.Window")
+		//}
 	}
 
 	return nil

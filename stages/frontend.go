@@ -20,7 +20,7 @@ func init() {
 
 var (
 	unauthorizedErr = errors.New("Unauthorized")
-	requestTimeout  = 15 * time.Minute
+	requestTimeout  = 60 * time.Minute
 )
 
 type ApiFrontendBasicStage struct {
@@ -84,7 +84,13 @@ func NewApiFrontendBasicStage(cfg *ApiFrontendBasicStageConfig) (*ApiFrontendBas
 		return nil, errors.Wrapf(err, "Could not listen on address %s", cfg.ListenAddr)
 	}
 	mortarpb.RegisterMortarServer(server, stage)
-	go server.Serve(l)
+	go func() {
+		for {
+			e := server.Serve(l)
+			log.Error(errors.Wrap(e, "Error GRPC serving. Restarting in 10 sec"))
+			time.Sleep(10 * time.Second)
+		}
+	}()
 	log.Infof("Listening GRPC on %s", cfg.ListenAddr)
 
 	return stage, nil
@@ -111,7 +117,10 @@ func (stage *ApiFrontendBasicStage) String() string {
 func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortarpb.QualifyRequest) (*mortarpb.QualifyResponse, error) {
 
 	t := time.Now()
-	defer qualifyProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
+	defer func() {
+		log.Info("Qualify took ", time.Since(t))
+		qualifyProcessingTimes.Observe(float64(time.Since(t).Nanoseconds() / 1e6))
+	}()
 
 	activeQueries.Inc()
 	defer activeQueries.Dec()
@@ -151,7 +160,7 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 	select {
 	case stage.output <- queryCtx:
 	case <-ctx.Done():
-		return nil, errors.New("timeout")
+		return nil, errors.Wrap(ctx.Err(), "qualify timeout on dispatching query")
 	}
 
 	select {
@@ -162,7 +171,7 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 		}
 		return resp, nil
 	case <-ctx.Done():
-		return nil, errors.New("timeout")
+		return nil, errors.Wrap(ctx.Err(), "qualify timeout on getting query response")
 	}
 
 	return nil, errors.New("impossible error")
@@ -211,7 +220,7 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	case sem := <-stage.sem:
 		defer func() { stage.sem <- sem }()
 	case <-ctx.Done():
-		return errors.New("timeout")
+		return errors.Wrap(ctx.Err(), "fetch timeout on getting semaphore")
 	}
 
 	responseChan := make(chan *mortarpb.FetchResponse)
@@ -235,14 +244,16 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 					// we have an error on sending, so we tear it all down
 					log.Error(errors.Wrap(err, "Error on sending"))
 					// have to remember to call cancel() here
+					finishResponse(resp)
 					cancel()
 					break sendloop
 				} else {
 					// happy path
+					finishResponse(resp)
 					messagesSent.Inc()
 				}
 			case <-ctx.Done():
-				err = errors.New("timeout")
+				err = errors.Wrap(ctx.Err(), "fetch timeout on response")
 				break sendloop
 			}
 		}

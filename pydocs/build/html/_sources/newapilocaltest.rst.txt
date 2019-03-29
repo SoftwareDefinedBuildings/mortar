@@ -1,0 +1,7 @@
+newapilocaltest module
+======================
+
+.. automodule:: newapilocaltest
+    :members:
+    :undoc-members:
+    :show-inheritance:
