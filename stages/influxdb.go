@@ -8,7 +8,8 @@ import (
 	"time"
 
 	mortarpb "git.sr.ht/~gabe/mortar/proto"
-	influx "github.com/influxdata/influxdb/client/v2"
+	//influx "github.com/influxdata/influxdb/client/v2"
+	influx "github.com/hamilton-lima/influxdb1-client/client"
 	//"github.com/pborman/uuid"
 	"github.com/pkg/errors"
 )
@@ -192,7 +193,6 @@ func (stage *InfluxDBTimeseriesQueryStage) processQuery(ctx Context) error {
 						continue
 					}
 
-					fmt.Println(row)
 					time, err := row[0].(json.Number).Int64()
 					if err != nil {
 						log.Error(err)
