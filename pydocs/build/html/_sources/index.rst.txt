@@ -19,7 +19,7 @@ PyMortar is available on pip:
 
     pip install pymortar>=1.0.0
 
-It depends on pandas and some GRPC-related packages. These should be installed automatically. You may find it helpful to install PyMortar inside a [virtual environment](https://docs.python.org/3/library/venv.html) or use the [PyMortar Docker container](quick-start.md).
+It depends on pandas and some GRPC-related packages. These should be installed automatically. You may find it helpful to install PyMortar inside a `virtual environment <https://docs.python.org/3/library/venv.html>`_ or use the `PyMortar Docker container <https://mortardata.org/docs/quick-start/>`_.
 
 .. toctree::
    :maxdepth: 2

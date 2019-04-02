@@ -253,7 +253,8 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 					messagesSent.Inc()
 				}
 			case <-ctx.Done():
-				err = errors.Wrap(ctx.Err(), "fetch timeout on response")
+				// this branch gets triggered because context gets cancelled
+				err = errors.Wrapf(ctx.Err(), "fetch timeout on response %v", queryCtx.errors)
 				break sendloop
 			}
 		}
@@ -271,6 +272,7 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 		log.Error("Got Error in ret ", e)
 		return e
 	case <-ctx.Done():
+		log.Error("timing out on waiting for result in fetch")
 		return errors.New("timeout")
 	}
 

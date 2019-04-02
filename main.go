@@ -226,9 +226,7 @@ func main() {
 		defer profile.Start(profile.MemProfile, profile.ProfilePath(".")).Stop()
 	}
 
-	//TODO: i think the problem is inside here
 	go func() {
-		log.Println("get output")
 		processedContexts := ts_stage.GetQueue()
 		for queryCtx := range processedContexts {
 			if queryCtx.response == nil {
