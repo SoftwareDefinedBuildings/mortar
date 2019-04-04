@@ -45,7 +45,7 @@ run-client: client-container mortar-analytics
 run-frontend: frontend-container
 	docker run -p 3000:3000 --name mortar-frontend mortar/frontend:latest
 
-push: container client-container
+push: container client-container frontend-container
 	docker push mortar/$(APP):$(RELEASE)
 	docker push mortar/$(APP):latest
 	docker push mortar/pymortar-client:$(RELEASE)
