@@ -80,27 +80,27 @@ func main() {
 	}
 	brickready = true
 
-	//ts_stage_cfg := &stages.TimeseriesStageConfig{
-	//	Upstream:     md_stage,
-	//	StageContext: maincontext,
-	//	BTrDBAddress: cfg.BTrDBAddr,
-	//}
-	//ts_stage, err := stages.NewTimeseriesQueryStage(ts_stage_cfg)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
-	ts_stage_cfg := &stages.InfluxDBTimeseriesStageConfig{
+	ts_stage_cfg := &stages.TimeseriesStageConfig{
 		Upstream:     md_stage,
 		StageContext: maincontext,
-		Address:      cfg.InfluxDBAddr,
-		Username:     cfg.InfluxDBUser,
-		Password:     cfg.InfluxDBPass,
+		BTrDBAddress: cfg.BTrDBAddr,
 	}
-	ts_stage, err := stages.NewInfluxDBTimeseriesQueryStage(ts_stage_cfg)
+	ts_stage, err := stages.NewTimeseriesQueryStage(ts_stage_cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	//	ts_stage_cfg := &stages.InfluxDBTimeseriesStageConfig{
+	//		Upstream:     md_stage,
+	//		StageContext: maincontext,
+	//		Address:      cfg.InfluxDBAddr,
+	//		Username:     cfg.InfluxDBUser,
+	//		Password:     cfg.InfluxDBPass,
+	//	}
+	//	ts_stage, err := stages.NewInfluxDBTimeseriesQueryStage(ts_stage_cfg)
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
 
 	//_ = ts_stage
 
