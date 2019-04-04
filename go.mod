@@ -63,14 +63,13 @@ require (
 	github.com/ugorji/go/codec v0.0.0-20190204201341-e444a5086c43 // indirect
 	go4.org v0.0.0-20190218023631-ce4c26f7be8e // indirect
 	golang.org/x/build v0.0.0-20190215225244-0261b66eb045 // indirect
-	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
+	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
 	golang.org/x/exp v0.0.0-20190212162250-21964bba6549 // indirect
 	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
-	golang.org/x/net v0.0.0-20190313220215-9f648a60d977
+	golang.org/x/net v0.0.0-20190403144856-b630fd6fe46b
 	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635 // indirect
 	golang.org/x/perf v0.0.0-20190124201629-844a5f5b46f4 // indirect
-	golang.org/x/sys v0.0.0-20190312061237-fead79001313 // indirect
-	golang.org/x/tools v0.0.0-20190315214010-f0bfdbff1f9c // indirect
+	golang.org/x/tools v0.0.0-20190404132500-923d25813098 // indirect
 	google.golang.org/genproto v0.0.0-20190215211957-bd968387e4aa // indirect
 	google.golang.org/grpc v1.18.0
 	gopkg.in/BTrDB/btrdb.v4 v4.15.3 // indirect
