@@ -56,14 +56,15 @@ func main() {
 		}
 	}()
 
-	frontend_stage_cfg := &stages.ApiFrontendBasicStageConfig{
-		StageContext: maincontext,
-		ListenAddr:   cfg.ListenAddr,
-		AuthConfig:   cfg.Cognito,
-		TLSCrtFile:   cfg.TLSCrtFile,
-		TLSKeyFile:   cfg.TLSKeyFile,
+	frontend_stage_cfg := &stages.WAVEMQFrontendStageConfig{
+		SiteRouter: "localhost:4516",
+		EntityFile: "myentity.ent",
+		Namespace:  "GyBnl_UdduxPIcOwkrnZfqJGQiztUWKyHj9m5zHiFHS1uQ==",
+		BaseURI:    "mortar",
+		ServerName: "mortar",
 	}
-	frontend_stage, err := stages.NewApiFrontendBasicStage(frontend_stage_cfg)
+
+	frontend_stage, err := stages.NewWAVEMQFrontendStage(frontend_stage_cfg)
 	if err != nil {
 		log.Fatal(err)
 	}

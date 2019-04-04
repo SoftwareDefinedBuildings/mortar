@@ -1,5 +1,5 @@
 APP?=mortar
-RELEASE?=1.0.8
+RELEASE?=1.0.9
 MORTAR_REPOSITORY?=https://github.com/SoftwareDefinedBuildings/mortar-analytics
 .PHONY: proto frontend
 
@@ -60,6 +60,9 @@ push-frontend: frontend-container
 
 build:
 	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go build -o mortar
+
+buildxbos: clean
+	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go build -o mortar cmd/xbosmain.go
 
 clean:
 	rm -rf _hod_

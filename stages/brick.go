@@ -1,4 +1,4 @@
-package main
+package stages
 
 import (
 	"context"
@@ -206,7 +206,6 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 	// store view name -> list of indexes to dependent dataFrames
 	var viewDataFrames = make(map[string][]int)
 	for idx, dataFrame := range ctx.request.DataFrames {
-
 	tsLoop:
 		for _, timeseries := range dataFrame.Timeseries {
 			viewDataVars[timeseries.View] = append(viewDataVars[timeseries.View], timeseries.DataVars...)
@@ -238,7 +237,9 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 			query.Graphs = []string{sitename}
 			res, err := stage.db.Select(ctx.ctx, query)
 			if err != nil {
+				log.Error(err)
 				ctx.addError(err)
+				continue
 				//return err
 			}
 

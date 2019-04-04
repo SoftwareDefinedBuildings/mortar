@@ -1,4 +1,4 @@
-package main
+package stages
 
 import (
 	"github.com/spf13/viper"
@@ -12,6 +12,9 @@ type Config struct {
 	HodConfig      string
 	ListenAddr     string
 	BTrDBAddr      string
+	InfluxDBAddr   string
+	InfluxDBUser   string
+	InfluxDBPass   string
 	PrometheusAddr string
 
 	TLSCrtFile string
@@ -39,6 +42,9 @@ func getCfg() *Config {
 	viper.SetDefault("Cognito.Region", os.Getenv("COGNITO_REGION"))
 	viper.SetDefault("HodConfig", os.Getenv("HODCONFIG_LOCATION"))
 	viper.SetDefault("BTrDBAddr", os.Getenv("BTRDB_ADDRESS"))
+	viper.SetDefault("InfluxDBAddr", os.Getenv("INFLUXDB_ADDRESS"))
+	viper.SetDefault("InfluxDBUser", os.Getenv("INFLUXDB_USER"))
+	viper.SetDefault("InfluxDBPass", os.Getenv("INFLUXDB_PASS"))
 	viper.SetDefault("ListenAddr", os.Getenv("LISTEN_ADDRESS"))
 	viper.SetDefault("PrometheusAddr", os.Getenv("PROMETHEUS_ADDRESS"))
 	viper.SetDefault("TLSCrtFile", os.Getenv("MORTAR_TLS_CRT_FILE"))
@@ -58,6 +64,9 @@ func getCfg() *Config {
 		HodConfig:      viper.GetString("HodConfig"),
 		ListenAddr:     viper.GetString("ListenAddr"),
 		BTrDBAddr:      viper.GetString("BTrDBAddr"),
+		InfluxDBAddr:   viper.GetString("InfluxDBAddr"),
+		InfluxDBUser:   viper.GetString("InfluxDBUser"),
+		InfluxDBPass:   viper.GetString("InfluxDBPass"),
 		PrometheusAddr: viper.GetString("PrometheusAddr"),
 		TLSCrtFile:     viper.GetString("TLSCrtFile"),
 		TLSKeyFile:     viper.GetString("TLSKeyFile"),
