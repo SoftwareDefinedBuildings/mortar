@@ -57,16 +57,20 @@ func NewTimeseriesQueryStage(cfg *TimeseriesStageConfig) (*TimeseriesQueryStage,
 			for {
 				select {
 				case ctx := <-input:
+
+					if ctx.isDone() {
+						ctx.response = nil
+						stage.output <- ctx
+						continue
+					}
+
 					if len(ctx.request.Sites) > 0 && len(ctx.request.DataFrames) > 0 {
-						if err := stage.processQuery2(ctx); err != nil {
+						if err := stage.processQuery(ctx); err != nil {
 							log.Println(err)
 						}
 					} else if len(ctx.request.Sites) > 0 && len(ctx.request.Streams) > 0 {
 						ctx.addError(errors.New("Need to upgrade to pymortar>=0.3.2"))
 						log.Error("Old client")
-						//if err := stage.processQuery(ctx); err != nil {
-						//	log.Println(err)
-						//}
 					}
 					ctx.response = nil
 					stage.output <- ctx
@@ -173,126 +177,7 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 		return err
 	}
 
-	//ctx.request.TimeParams.window
-	//qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
-
-	// loop over all streams, and then over all UUIDs
-	for _, reqstream := range ctx.request.Streams {
-		for _, uuStr := range reqstream.Uuids {
-			uu := uuid.Parse(uuStr)
-			if uu == nil {
-				continue
-			}
-			stream, err := stage.getStream(ctx.ctx, uu)
-			if err != nil {
-				ctx.addError(err)
-				return err
-			}
-
-			// handle RAW streams
-			if reqstream.Aggregation == mortarpb.AggFunc_AGG_FUNC_RAW {
-				// if raw data...
-				rawpoints, generations, errchan := stream.RawValues(ctx.ctx, start_time.UnixNano(), end_time.UnixNano(), 0)
-				resp := &mortarpb.FetchResponse{}
-				var pcount = 0
-				resp.Times = getTimeBuffer()
-				resp.Values = getValueBuffer()
-				for p := range rawpoints {
-					resp.Times[pcount] = p.Time
-					resp.Values[pcount] = p.Value
-					pcount += 1
-					if pcount == TS_BATCH_SIZE {
-						resp.Variable = reqstream.Name
-						resp.Identifier = uuStr
-						ctx.response = resp
-						stage.output <- ctx
-						resp = &mortarpb.FetchResponse{}
-						pcount = 0
-					}
-				}
-				if len(resp.Times) > 0 {
-					resp.Variable = reqstream.Name
-					resp.Identifier = uuStr
-					resp.Times = resp.Times[:pcount]
-					resp.Values = resp.Values[:pcount]
-					ctx.response = resp
-					stage.output <- ctx
-				}
-
-				<-generations
-				if err := <-errchan; err != nil {
-					ctx.addError(err)
-					return err
-				}
-			} else {
-				windowSize, err := ParseDuration(ctx.request.Time.Window)
-				if err != nil {
-					ctx.addError(err)
-					return err
-				}
-				windowDepth := math.Log2(float64(windowSize))
-				suggestedAccuracy := uint8(math.Max(windowDepth-5, 30))
-
-				statpoints, generations, errchan := stream.Windows(ctx.ctx, start_time.UnixNano(), end_time.UnixNano(), uint64(windowSize.Nanoseconds()), suggestedAccuracy, 0)
-
-				resp := &mortarpb.FetchResponse{}
-				var pcount = 0
-
-				resp.Times = getTimeBuffer()
-				resp.Values = getValueBuffer()
-
-				for p := range statpoints {
-					resp.Times[pcount] = p.Time
-					resp.Values[pcount] = valueFromAggFunc(p, reqstream.Aggregation)
-					pcount += 1
-
-					if pcount == TS_BATCH_SIZE {
-						resp.Variable = reqstream.Name
-						resp.Identifier = uuStr
-						ctx.response = resp
-						stage.output <- ctx
-						resp = &mortarpb.FetchResponse{}
-						pcount = 0
-					}
-				}
-				if len(resp.Times) > 0 {
-					resp.Variable = reqstream.Name
-					resp.Identifier = uuStr
-					resp.Times = resp.Times[:pcount]
-					resp.Values = resp.Values[:pcount]
-					ctx.response = resp
-					stage.output <- ctx
-				}
-
-				<-generations
-				if err := <-errchan; err != nil {
-					ctx.addError(err)
-					return err
-				}
-
-			}
-
-		}
-	}
-
-	return nil
-}
-
-func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
-	//	defer ctx.finish()
-	// parse timestamps for the query
-	start_time, err := time.Parse(time.RFC3339, ctx.request.Time.Start)
-	if err != nil {
-		err = errors.Wrapf(err, "Could not parse Start time (%s)", ctx.request.Time.Start)
-		ctx.addError(err)
-		return err
-	}
-	end_time, err := time.Parse(time.RFC3339, ctx.request.Time.End)
-	if err != nil {
-		err = errors.Wrapf(err, "Could not parse End time (%s)", ctx.request.Time.End)
-		ctx.addError(err)
-		return err
-	}
+	log.Debug("Fetch data in [", start_time, " - ", end_time, "]")
 
 	//ctx.request.TimeParams.window
 	//qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
@@ -321,11 +206,18 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 					pcount += 1
 					resp.Times = append(resp.Times, p.Time)
 					resp.Values = append(resp.Values, p.Value)
+					if p.Time > end_time.UnixNano() {
+						//TODO: fix this
+						continue
+						//log.Warning("TIME start ", start_time.UnixNano(), " until ", end_time.UnixNano(), " but got ", p.Time)
+					}
 					if pcount == TS_BATCH_SIZE {
 						resp.DataFrame = dataFrame.Name
 						resp.Identifier = uuStr
-						ctx.response = resp
-						stage.output <- ctx
+						if !ctx.isDone() {
+							ctx.response = resp
+							stage.output <- ctx
+						}
 						resp = &mortarpb.FetchResponse{}
 						pcount = 0
 					}
@@ -333,13 +225,16 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 				if len(resp.Times) > 0 {
 					resp.DataFrame = dataFrame.Name
 					resp.Identifier = uuStr
-					ctx.response = resp
-					stage.output <- ctx
+					if !ctx.isDone() {
+						ctx.response = resp
+						stage.output <- ctx
+					}
 				}
 
 				<-generations
 				if err := <-errchan; err != nil {
 					ctx.addError(err)
+					log.Error(errors.Wrap(err, "got error in stream rawvalues"))
 					return err
 				}
 			} else {
@@ -363,8 +258,10 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 					if pcount == TS_BATCH_SIZE {
 						resp.DataFrame = dataFrame.Name
 						resp.Identifier = uuStr
-						ctx.response = resp
-						stage.output <- ctx
+						if !ctx.isDone() {
+							ctx.response = resp
+							stage.output <- ctx
+						}
 						resp = &mortarpb.FetchResponse{}
 						pcount = 0
 					}
@@ -372,8 +269,10 @@ func (stage *TimeseriesQueryStage) processQuery2(ctx Context) error {
 				if len(resp.Times) > 0 {
 					resp.DataFrame = dataFrame.Name
 					resp.Identifier = uuStr
-					ctx.response = resp
-					stage.output <- ctx
+					if !ctx.isDone() {
+						ctx.response = resp
+						stage.output <- ctx
+					}
 				}
 
 				<-generations

@@ -27,7 +27,7 @@ type BrickQueryStage struct {
 	ctx      context.Context
 	output   chan Context
 
-	db            *hod.Log
+	db            *hod.HodDB
 	highwatermark int64
 
 	sync.Mutex
@@ -55,7 +55,7 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 	if err != nil {
 		return nil, err
 	}
-	stage.db, err = hod.NewLog(hodcfg)
+	stage.db, err = hod.MakeHodDB(hodcfg)
 	if err != nil {
 		return nil, err
 	}
@@ -161,10 +161,13 @@ func (stage *BrickQueryStage) processQualify(ctx Context) error {
 	version_response, err := stage.db.Versions(ctx.ctx, version_query)
 	if err != nil {
 		ctx.addError(err)
+		log.Error(err)
 		return err
 	}
 	if version_response.Error != "" {
-		ctx.addError(errors.New(version_response.Error))
+		err = errors.New(version_response.Error)
+		log.Error(err)
+		ctx.addError(err)
 		return err
 	}
 
@@ -173,9 +176,10 @@ func (stage *BrickQueryStage) processQualify(ctx Context) error {
 	}
 
 	for _, querystring := range ctx.qualify_request.Required {
-		query, err := stage.db.ParseQuery(querystring, stage.highwatermark)
+		query, err := stage.db.ParseQuery(querystring, 0)
 		if err != nil {
 			ctx.addError(err)
+			log.Error(err)
 			return err
 		}
 
@@ -183,6 +187,7 @@ func (stage *BrickQueryStage) processQualify(ctx Context) error {
 			query.Graphs = []string{site}
 			res, err := stage.db.Select(ctx.ctx, query)
 			if err != nil {
+				log.Error(err)
 				ctx.addError(err)
 				//return err
 			} else if len(res.Rows) == 0 {
@@ -206,6 +211,7 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 	// store view name -> list of indexes to dependent dataFrames
 	var viewDataFrames = make(map[string][]int)
 	for idx, dataFrame := range ctx.request.DataFrames {
+		idx := idx
 	tsLoop:
 		for _, timeseries := range dataFrame.Timeseries {
 			viewDataVars[timeseries.View] = append(viewDataVars[timeseries.View], timeseries.DataVars...)
@@ -221,6 +227,9 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 		}
 	}
 
+	log.Info("DataVars: ", viewDataVars)
+	log.Info("DataFrames: ", viewDataFrames)
+
 	for _, view := range ctx.request.Views {
 		query, err := stage.db.ParseQuery(view.Definition, stage.highwatermark)
 		if err != nil {
@@ -233,6 +242,7 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 		// property is how to relate the points to the timeseries database. However, it also introduces the complexity
 		// of dealing with whether or not the variables *do* have associated timeseries or not.
 		mapping, _ := rewriteQuery(viewDataVars[view.Name], query)
+		log.Warning("rewrote: ", query)
 		for _, sitename := range ctx.request.Sites {
 			query.Graphs = []string{sitename}
 			res, err := stage.db.Select(ctx.ctx, query)

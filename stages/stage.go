@@ -24,9 +24,19 @@ type Context struct {
 	sync.Mutex
 }
 
+func (ctx *Context) isDone() bool {
+	select {
+	case <-ctx.ctx.Done():
+		return true
+	default:
+		return false
+	}
+}
+
 func (ctx *Context) addError(err error) {
 	ctx.Lock()
 	defer ctx.Unlock()
+	log.Error("Context Error", err)
 	ctx.errors = append(ctx.errors, err)
 }
 
@@ -57,6 +67,9 @@ func Showtime(queue chan Context) {
 	go func() {
 		log.Println("get output")
 		for out := range queue {
+			if out.isDone() {
+				continue
+			}
 			if out.response == nil {
 				if out.done != nil {
 					close(out.done)
