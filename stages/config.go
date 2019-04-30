@@ -12,6 +12,9 @@ type Config struct {
 	// wavemq frontend config
 	WAVEMQ WAVEMQConfig
 
+	// WAVE auth frontend config
+	WAVE WAVEConfig
+
 	HodConfig      string
 	ListenAddr     string
 	BTrDBAddr      string
@@ -22,6 +25,15 @@ type Config struct {
 
 	TLSCrtFile string
 	TLSKeyFile string
+}
+
+type WAVEConfig struct {
+	// defaults to localhost:410
+	Agent string
+	// defaults to WAVE_DEFAULT_ENTITY
+	EntityFile string
+	// proof file for esrver
+	ProofFile string
 }
 
 type WAVEMQConfig struct {
@@ -64,6 +76,10 @@ func getCfg() *Config {
 	viper.SetDefault("WAVEMQ.BaseURI", os.Getenv("MORTAR_WAVE_BASEURI"))
 	viper.SetDefault("WAVEMQ.ServerName", os.Getenv("MORTAR_WAVE_SERVERNAME"))
 
+	viper.SetDefault("WAVE.Agent", "localhost:410")
+	viper.SetDefault("WAVE.EntityFile", os.Getenv("WAVE_DEFAULT_ENTITY"))
+	viper.SetDefault("WAVE.ProofFile", os.Getenv("MORTAR_WAVE_SERVERPROOF"))
+
 	viper.SetDefault("HodConfig", os.Getenv("HODCONFIG_LOCATION"))
 	viper.SetDefault("BTrDBAddr", os.Getenv("BTRDB_ADDRESS"))
 	viper.SetDefault("InfluxDBAddr", os.Getenv("INFLUXDB_ADDRESS"))
@@ -83,7 +99,7 @@ func getCfg() *Config {
 		Region:          viper.GetString("Cognito.Region"),
 	}
 
-	wavecfg := WAVEMQConfig{
+	wavemqcfg := WAVEMQConfig{
 		SiteRouter: viper.GetString("WAVEMQ.SiteRouter"),
 		EntityFile: viper.GetString("WAVEMQ.EntityFile"),
 		Namespace:  viper.GetString("WAVEMQ.Namespace"),
@@ -91,9 +107,16 @@ func getCfg() *Config {
 		ServerName: viper.GetString("WAVEMQ.ServerName"),
 	}
 
+	wavecfg := WAVEConfig{
+		EntityFile: viper.GetString("WAVE.EntityFile"),
+		ProofFile:  viper.GetString("WAVE.ProofFile"),
+		Agent:      viper.GetString("WAVE.Agent"),
+	}
+
 	return &Config{
 		Cognito:        cognito,
-		WAVEMQ:         wavecfg,
+		WAVEMQ:         wavemqcfg,
+		WAVE:           wavecfg,
 		HodConfig:      viper.GetString("HodConfig"),
 		ListenAddr:     viper.GetString("ListenAddr"),
 		BTrDBAddr:      viper.GetString("BTrDBAddr"),
