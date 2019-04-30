@@ -35,6 +35,13 @@ frontend:
 	go build -o frontend/exec-frontend ./frontend
 	cd frontend && ./exec-frontend
 
+hoddb:
+	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go build -o containers/hoddb/log git.sr.ht/~gabe/hod
+
+hoddb-container: hoddb
+	docker build -t mortar/hoddb:$(RELEASE) containers/hoddb
+	docker build -t mortar/hoddb:latest containers/hoddb
+
 run: build clean
 	./mortar
 
@@ -57,6 +64,10 @@ push-mortar: container
 
 push-frontend: frontend-container
 	docker push mortar/frontend:latest
+
+push-hoddb: hoddb-container
+	docker push mortar/hoddb:$(RELEASE)
+	docker push mortar/hoddb:latest
 
 build:
 	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go build -o mortar

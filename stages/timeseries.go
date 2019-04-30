@@ -203,14 +203,14 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 				resp := &mortarpb.FetchResponse{}
 				var pcount = 0
 				for p := range rawpoints {
-					pcount += 1
-					resp.Times = append(resp.Times, p.Time)
-					resp.Values = append(resp.Values, p.Value)
 					if p.Time > end_time.UnixNano() {
 						//TODO: fix this
 						continue
 						//log.Warning("TIME start ", start_time.UnixNano(), " until ", end_time.UnixNano(), " but got ", p.Time)
 					}
+					pcount += 1
+					resp.Times = append(resp.Times, p.Time)
+					resp.Values = append(resp.Values, p.Value)
 					if pcount == TS_BATCH_SIZE {
 						resp.DataFrame = dataFrame.Name
 						resp.Identifier = uuStr

@@ -5,7 +5,7 @@ require (
 	dmitri.shuralyov.com/app/changes v0.0.0-20181114035150-5af16e21babb // indirect
 	dmitri.shuralyov.com/service/change v0.0.0-20190203163610-217368fe4577 // indirect
 	git.apache.org/thrift.git v0.12.0 // indirect
-	git.sr.ht/~gabe/hod v0.0.0-20190219063933-d332e8e08e54
+	git.sr.ht/~gabe/hod v0.6.7
 	github.com/Shopify/sarama v1.20.1 // indirect
 	github.com/aws/aws-sdk-go v1.16.19
 	github.com/coreos/etcd v3.3.12+incompatible // indirect
@@ -15,7 +15,7 @@ require (
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
-	github.com/golang/protobuf v1.2.0
+	github.com/golang/protobuf v1.3.1
 	github.com/golang/snappy v0.0.0-20190218232222-2a8bb927dd31 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/pprof v0.0.0-20190208070709-b421f19a5c07 // indirect
@@ -23,7 +23,6 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
 	github.com/gorilla/mux v1.7.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
-	github.com/grpc-ecosystem/grpc-gateway v1.7.0 // indirect
 	github.com/gtfierro/xboswave v0.0.0-20190401063038-560862673af8
 	github.com/hamilton-lima/influxdb1-client v0.0.0-20190328211940-678e272fb631
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
@@ -65,13 +64,11 @@ require (
 	golang.org/x/build v0.0.0-20190215225244-0261b66eb045 // indirect
 	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
 	golang.org/x/exp v0.0.0-20190212162250-21964bba6549 // indirect
-	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
-	golang.org/x/net v0.0.0-20190403144856-b630fd6fe46b
+	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
 	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635 // indirect
 	golang.org/x/perf v0.0.0-20190124201629-844a5f5b46f4 // indirect
-	golang.org/x/tools v0.0.0-20190404132500-923d25813098 // indirect
 	google.golang.org/genproto v0.0.0-20190215211957-bd968387e4aa // indirect
-	google.golang.org/grpc v1.18.0
+	google.golang.org/grpc v1.19.0
 	gopkg.in/BTrDB/btrdb.v4 v4.15.3 // indirect
 	gopkg.in/btrdb.v4 v4.15.3
 	honnef.co/go/tools v0.0.0-20190215041234-466a0476246c // indirect

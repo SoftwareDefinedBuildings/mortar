@@ -242,9 +242,9 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 		// property is how to relate the points to the timeseries database. However, it also introduces the complexity
 		// of dealing with whether or not the variables *do* have associated timeseries or not.
 		mapping, _ := rewriteQuery(viewDataVars[view.Name], query)
-		log.Warning("rewrote: ", query)
 		for _, sitename := range ctx.request.Sites {
 			query.Graphs = []string{sitename}
+			log.Warning("rewrote: ", query)
 			res, err := stage.db.Select(ctx.ctx, query)
 			if err != nil {
 				log.Error(err)
@@ -268,6 +268,8 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 			brickresp.View = view.Name
 			brickresp.Variables = res.Variables
 
+			log.Info("Got rows: ", len(res.Rows))
+
 			for _, row := range res.Rows {
 				//	// for each dependent dataFrame
 				for _, selIdx := range viewDataFrames[view.Name] {
@@ -283,7 +285,7 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 						}
 					}
 					// TODO: do we need to update the dataFrame?
-					//ctx.request.DataFrames[selIdx] = dataFrame
+					ctx.request.DataFrames[selIdx] = dataFrame
 				}
 				//}
 				// we also add the query results to the output
