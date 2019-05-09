@@ -23,9 +23,10 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
 	github.com/gorilla/mux v1.7.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
-	github.com/gtfierro/xboswave v0.0.0-20190401063038-560862673af8
+	github.com/gtfierro/xboswave v0.0.0-20190430185658-10633856e9c9
 	github.com/hamilton-lima/influxdb1-client v0.0.0-20190328211940-678e272fb631
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
+	github.com/immesys/wave v0.4.1
 	github.com/immesys/wavemq v1.3.0
 	github.com/influxdata/influxdb v1.7.5
 	github.com/influxdata/platform v0.0.0-20190117200541-d500d3cf5589 // indirect
