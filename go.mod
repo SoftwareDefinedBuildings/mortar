@@ -5,18 +5,20 @@ require (
 	dmitri.shuralyov.com/app/changes v0.0.0-20181114035150-5af16e21babb // indirect
 	dmitri.shuralyov.com/service/change v0.0.0-20190203163610-217368fe4577 // indirect
 	git.apache.org/thrift.git v0.12.0 // indirect
-	git.sr.ht/~gabe/hod v0.6.7
+	git.sr.ht/~gabe/hod v0.6.10
 	github.com/Shopify/sarama v1.20.1 // indirect
 	github.com/aws/aws-sdk-go v1.16.19
+	github.com/chzyer/logex v1.1.10 // indirect
+	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
+	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/coreos/etcd v3.3.12+incompatible // indirect
 	github.com/coreos/go-systemd v0.0.0-20190212144455-93d5ec2c7f76 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/glycerine/go-unsnap-stream v0.0.0-20181221182339-f9677308dec2 // indirect
+	github.com/glycerine/goconvey v0.0.0-20190315024820-982ee783a72e // indirect
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
 	github.com/golang/protobuf v1.3.1
-	github.com/golang/snappy v0.0.0-20190218232222-2a8bb927dd31 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/pprof v0.0.0-20190208070709-b421f19a5c07 // indirect
 	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
@@ -31,11 +33,12 @@ require (
 	github.com/influxdata/influxdb v1.7.5
 	github.com/influxdata/platform v0.0.0-20190117200541-d500d3cf5589 // indirect
 	github.com/kisielk/errcheck v1.2.0 // indirect
+	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
 	github.com/openzipkin/zipkin-go v0.1.5 // indirect
 	github.com/pborman/uuid v1.2.0
 	github.com/pkg/errors v0.8.1
-	github.com/pkg/profile v1.2.1
+	github.com/pkg/profile v1.3.0
 	github.com/prometheus/client_golang v0.9.2
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90
 	github.com/prometheus/common v0.2.0 // indirect
@@ -55,11 +58,9 @@ require (
 	github.com/shurcooL/reactions v0.0.0-20181222204718-145cd5e7f3d1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/shurcooL/webdavfs v0.0.0-20181215192745-5988b2d638f6 // indirect
-	github.com/sirupsen/logrus v1.3.0
+	github.com/sirupsen/logrus v1.4.1
 	github.com/spf13/afero v1.2.1 // indirect
-	github.com/spf13/viper v1.3.1
-	github.com/stretchr/testify v1.3.0 // indirect
-	github.com/tinylib/msgp v1.1.0 // indirect
+	github.com/spf13/viper v1.3.2
 	github.com/ugorji/go/codec v0.0.0-20190204201341-e444a5086c43 // indirect
 	go4.org v0.0.0-20190218023631-ce4c26f7be8e // indirect
 	golang.org/x/build v0.0.0-20190215225244-0261b66eb045 // indirect
@@ -68,8 +69,9 @@ require (
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
 	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635 // indirect
 	golang.org/x/perf v0.0.0-20190124201629-844a5f5b46f4 // indirect
-	google.golang.org/genproto v0.0.0-20190215211957-bd968387e4aa // indirect
-	google.golang.org/grpc v1.19.0
+	golang.org/x/sys v0.0.0-20190405154228-4b34438f7a67 // indirect
+	golang.org/x/tools v0.0.0-20190407030857-0fdf0c73855b // indirect
+	google.golang.org/grpc v1.20.1
 	gopkg.in/BTrDB/btrdb.v4 v4.15.3 // indirect
 	gopkg.in/btrdb.v4 v4.15.3
 	honnef.co/go/tools v0.0.0-20190215041234-466a0476246c // indirect

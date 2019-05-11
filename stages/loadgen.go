@@ -7,17 +7,17 @@ import (
 )
 
 type SimpleLoadGenStage struct {
-	output chan Context
+	output chan *Request
 	count  int64
 }
 
-func NewSimpleLoadGenStage(contexts ...func() Context) *SimpleLoadGenStage {
+func NewSimpleLoadGenStage(contexts ...func() *Request) *SimpleLoadGenStage {
 	stage := &SimpleLoadGenStage{
-		output: make(chan Context),
+		output: make(chan *Request),
 	}
 
 	if len(contexts) == 0 {
-		contexts = append(contexts, func() Context { return Context{} })
+		contexts = append(contexts, func() *Request { return &Request{} })
 	}
 
 	var notifier sync.Once
@@ -52,8 +52,8 @@ func (stage *SimpleLoadGenStage) GetUpstream() Stage {
 func (stage *SimpleLoadGenStage) SetUpstream(upstream Stage) {
 }
 
-// blocks on internal channel until next "Context" is ready
-func (stage *SimpleLoadGenStage) GetQueue() chan Context {
+// blocks on internal channel until next "*Request" is ready
+func (stage *SimpleLoadGenStage) GetQueue() chan *Request {
 	return stage.output
 }
 

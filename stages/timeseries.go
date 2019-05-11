@@ -17,7 +17,7 @@ import (
 type TimeseriesQueryStage struct {
 	upstream Stage
 	ctx      context.Context
-	output   chan Context
+	output   chan *Request
 
 	// timeseries database stuff
 	conn        *btrdb.BTrDB
@@ -38,7 +38,7 @@ func NewTimeseriesQueryStage(cfg *TimeseriesStageConfig) (*TimeseriesQueryStage,
 	}
 	stage := &TimeseriesQueryStage{
 		upstream: cfg.Upstream,
-		output:   make(chan Context),
+		output:   make(chan *Request),
 		ctx:      cfg.StageContext,
 	}
 
@@ -56,25 +56,13 @@ func NewTimeseriesQueryStage(cfg *TimeseriesStageConfig) (*TimeseriesQueryStage,
 			input := stage.upstream.GetQueue()
 			for {
 				select {
-				case ctx := <-input:
-
-					if ctx.isDone() {
-						ctx.response = nil
-						stage.output <- ctx
-						continue
-					}
-
-					if len(ctx.request.Sites) > 0 && len(ctx.request.DataFrames) > 0 {
-						if err := stage.processQuery(ctx); err != nil {
+				case req := <-input:
+					if len(req.fetch_request.Sites) > 0 && len(req.fetch_request.DataFrames) > 0 {
+						if err := stage.processQuery(req); err != nil {
 							log.Println(err)
 						}
-					} else if len(ctx.request.Sites) > 0 && len(ctx.request.Streams) > 0 {
-						ctx.addError(errors.New("Need to upgrade to pymortar>=0.3.2"))
-						log.Error("Old client")
 					}
-					ctx.response = nil
-					stage.output <- ctx
-					//ctx.done <- nil
+					//stage.output <- req
 				case <-stage.ctx.Done():
 					// case that breaks the stage and releases resources
 					fmt.Println("Ending Timeseries Queue")
@@ -102,7 +90,7 @@ func (stage *TimeseriesQueryStage) SetUpstream(upstream Stage) {
 	fmt.Println("Updated stage to ", upstream)
 }
 
-func (stage *TimeseriesQueryStage) GetQueue() chan Context {
+func (stage *TimeseriesQueryStage) GetQueue() chan *Request {
 	return stage.output
 }
 
@@ -128,7 +116,6 @@ func (stage *TimeseriesQueryStage) getStream(ctx context.Context, streamuuid uui
 			e := btrdb.ToCodedError(existsErr)
 			if e.Code != 501 {
 				err = errors.Wrap(existsErr, "Could not fetch stream")
-				log.Fatal("c")
 				//defer cancel()
 				return
 			}
@@ -161,19 +148,19 @@ func (stage *TimeseriesQueryStage) getStream(ctx context.Context, streamuuid uui
 	return
 }
 
-func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
+func (stage *TimeseriesQueryStage) processQuery(req *Request) error {
 	//	defer ctx.finish()
 	// parse timestamps for the query
-	start_time, err := time.Parse(time.RFC3339, ctx.request.Time.Start)
+	start_time, err := time.Parse(time.RFC3339, req.fetch_request.Time.Start)
 	if err != nil {
-		err = errors.Wrapf(err, "Could not parse Start time (%s)", ctx.request.Time.Start)
-		ctx.addError(err)
+		err = errors.Wrapf(err, "Could not parse Start time (%s)", req.fetch_request.Time.Start)
+		req.addError(err)
 		return err
 	}
-	end_time, err := time.Parse(time.RFC3339, ctx.request.Time.End)
+	end_time, err := time.Parse(time.RFC3339, req.fetch_request.Time.End)
 	if err != nil {
-		err = errors.Wrapf(err, "Could not parse End time (%s)", ctx.request.Time.End)
-		ctx.addError(err)
+		err = errors.Wrapf(err, "Could not parse End time (%s)", req.fetch_request.Time.End)
+		req.addError(err)
 		return err
 	}
 
@@ -183,23 +170,23 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 	//qctx, cancel := context.WithTimeout(ctx.ctx, MAX_TIMEOUT)
 
 	// loop over all streams, and then over all UUIDs
-	for _, dataFrame := range ctx.request.DataFrames {
+	for _, dataFrame := range req.fetch_request.DataFrames {
 		for _, uuStr := range dataFrame.Uuids {
 			uu := uuid.Parse(uuStr)
 			if uu == nil {
 				log.Warningf("Could not parse uuid %s", uuStr)
 				continue
 			}
-			stream, err := stage.getStream(ctx.ctx, uu)
+			stream, err := stage.getStream(req.ctx, uu)
 			if err != nil {
-				ctx.addError(err)
+				req.addError(err)
 				return err
 			}
 
 			// handle RAW streams
 			if dataFrame.Aggregation == mortarpb.AggFunc_AGG_FUNC_RAW {
 				// if raw data...
-				rawpoints, generations, errchan := stream.RawValues(ctx.ctx, start_time.UnixNano(), end_time.UnixNano(), 0)
+				rawpoints, generations, errchan := stream.RawValues(req.ctx, start_time.UnixNano(), end_time.UnixNano(), 0)
 				resp := &mortarpb.FetchResponse{}
 				var pcount = 0
 				for p := range rawpoints {
@@ -214,9 +201,10 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 					if pcount == TS_BATCH_SIZE {
 						resp.DataFrame = dataFrame.Name
 						resp.Identifier = uuStr
-						if !ctx.isDone() {
-							ctx.response = resp
-							stage.output <- ctx
+						select {
+						case req.fetch_responses <- resp:
+						case <-req.Done():
+							continue
 						}
 						resp = &mortarpb.FetchResponse{}
 						pcount = 0
@@ -225,28 +213,28 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 				if len(resp.Times) > 0 {
 					resp.DataFrame = dataFrame.Name
 					resp.Identifier = uuStr
-					if !ctx.isDone() {
-						ctx.response = resp
-						stage.output <- ctx
+					select {
+					case req.fetch_responses <- resp:
+					case <-req.Done():
 					}
 				}
 
 				<-generations
 				if err := <-errchan; err != nil {
-					ctx.addError(err)
+					req.addError(err)
 					log.Error(errors.Wrap(err, "got error in stream rawvalues"))
 					return err
 				}
 			} else {
 				windowSize, err := ParseDuration(dataFrame.Window)
 				if err != nil {
-					ctx.addError(err)
+					req.addError(err)
 					return err
 				}
 				windowDepth := math.Log2(float64(windowSize))
 				suggestedAccuracy := uint8(math.Max(windowDepth-5, 30))
 
-				statpoints, generations, errchan := stream.Windows(ctx.ctx, start_time.UnixNano(), end_time.UnixNano(), uint64(windowSize.Nanoseconds()), suggestedAccuracy, 0)
+				statpoints, generations, errchan := stream.Windows(req.ctx, start_time.UnixNano(), end_time.UnixNano(), uint64(windowSize.Nanoseconds()), suggestedAccuracy, 0)
 
 				resp := &mortarpb.FetchResponse{}
 				var pcount = 0
@@ -258,10 +246,14 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 					if pcount == TS_BATCH_SIZE {
 						resp.DataFrame = dataFrame.Name
 						resp.Identifier = uuStr
-						if !ctx.isDone() {
-							ctx.response = resp
-							stage.output <- ctx
+						//if !ctx.isDone() {
+						select {
+						case req.fetch_responses <- resp:
+						case <-req.Done():
+							continue
 						}
+						//stage.output <- ctx
+						//}
 						resp = &mortarpb.FetchResponse{}
 						pcount = 0
 					}
@@ -269,15 +261,16 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 				if len(resp.Times) > 0 {
 					resp.DataFrame = dataFrame.Name
 					resp.Identifier = uuStr
-					if !ctx.isDone() {
-						ctx.response = resp
-						stage.output <- ctx
+					select {
+					case req.fetch_responses <- resp:
+					case <-req.Done():
+						continue
 					}
 				}
 
 				<-generations
 				if err := <-errchan; err != nil {
-					ctx.addError(err)
+					req.addError(err)
 					return err
 				}
 
@@ -285,6 +278,7 @@ func (stage *TimeseriesQueryStage) processQuery(ctx Context) error {
 
 		}
 	}
+	req.fetch_responses <- nil
 
 	return nil
 }

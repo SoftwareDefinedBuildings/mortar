@@ -25,7 +25,7 @@ type WAVEMQFrontendStageConfig struct {
 
 type WAVEMQFrontendStage struct {
 	client         mqpb.WAVEMQClient
-	output         chan Context
+	output         chan *Request
 	perspective    *mqpb.Perspective
 	namespaceBytes []byte
 	sem            chan struct{}
@@ -59,7 +59,7 @@ func NewWAVEMQFrontendStage(cfg *WAVEMQFrontendStageConfig) (*WAVEMQFrontendStag
 	}
 
 	stage := &WAVEMQFrontendStage{
-		output:         make(chan Context),
+		output:         make(chan *Request),
 		client:         mqpb.NewWAVEMQClient(conn),
 		perspective:    perspective,
 		namespaceBytes: namespaceBytes,
@@ -117,7 +117,7 @@ func (stage *WAVEMQFrontendStage) SetUpstream(upstream Stage) {
 	//has no upstream
 }
 
-func (stage *WAVEMQFrontendStage) GetQueue() chan Context {
+func (stage *WAVEMQFrontendStage) GetQueue() chan *Request {
 	return stage.output
 }
 func (stage *WAVEMQFrontendStage) String() string {
@@ -145,21 +145,16 @@ func (stage *WAVEMQFrontendStage) Qualify(ctx context.Context, request *mortarpb
 	defer cancel()
 
 	// prepare context for the execution
-	responseChan := make(chan *mortarpb.QualifyResponse)
-	queryCtx := Context{
-		ctx:             ctx,
-		qualify_request: *request,
-		qualify_done:    responseChan,
-	}
+	req := NewQualifyRequest(ctx, request)
 
 	select {
-	case stage.output <- queryCtx:
+	case stage.output <- req:
 	case <-ctx.Done():
 		return nil, errors.Wrap(ctx.Err(), "qualify timeout on dispatching query")
 	}
 
 	select {
-	case resp := <-responseChan:
+	case resp := <-req.qualify_responses:
 		//close(responseChan)
 		if resp.Error != "" {
 			log.Warning(resp.Error)
@@ -203,12 +198,7 @@ func (stage *WAVEMQFrontendStage) Fetch(request *mortarpb.FetchRequest, client m
 		return errors.Wrap(ctx.Err(), "fetch timeout on getting semaphore")
 	}
 
-	responseChan := make(chan *mortarpb.FetchResponse)
-	queryCtx := Context{
-		ctx:     ctx,
-		request: *request,
-		done:    responseChan,
-	}
+	req := NewFetchRequest(ctx, request)
 	ret := make(chan error)
 	go func() {
 		var err error
@@ -216,7 +206,7 @@ func (stage *WAVEMQFrontendStage) Fetch(request *mortarpb.FetchRequest, client m
 	sendloop:
 		for {
 			select {
-			case resp := <-responseChan:
+			case resp := <-req.fetch_responses:
 				if resp == nil {
 					// if this is nil then we are done, but there's no error (yet)
 					break sendloop
@@ -241,7 +231,7 @@ func (stage *WAVEMQFrontendStage) Fetch(request *mortarpb.FetchRequest, client m
 	}()
 
 	select {
-	case stage.output <- queryCtx:
+	case stage.output <- req:
 	case <-ctx.Done():
 		return errors.New("timeout")
 	}

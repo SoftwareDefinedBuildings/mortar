@@ -110,8 +110,6 @@ func main() {
 		end = end.GetUpstream()
 	}
 
-	stages.Showtime(ts_stage.GetQueue())
-
 	select {}
 	cancel()
 }

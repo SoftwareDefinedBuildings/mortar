@@ -17,7 +17,7 @@ import (
 type InfluxDBTimeseriesQueryStage struct {
 	upstream Stage
 	ctx      context.Context
-	output   chan Context
+	output   chan *Request
 
 	conn influx.Client
 	// timeseries database stuff
@@ -49,7 +49,7 @@ func NewInfluxDBTimeseriesQueryStage(cfg *InfluxDBTimeseriesStageConfig) (*Influ
 
 	stage := &InfluxDBTimeseriesQueryStage{
 		upstream: cfg.Upstream,
-		output:   make(chan Context),
+		output:   make(chan *Request),
 		ctx:      cfg.StageContext,
 		conn:     conn,
 	}
@@ -62,15 +62,13 @@ func NewInfluxDBTimeseriesQueryStage(cfg *InfluxDBTimeseriesStageConfig) (*Influ
 			input := stage.upstream.GetQueue()
 			for {
 				select {
-				case ctx := <-input:
-					if len(ctx.request.Sites) > 0 && len(ctx.request.DataFrames) > 0 {
-						if err := stage.processQuery(ctx); err != nil {
+				case req := <-input:
+					if len(req.fetch_request.Sites) > 0 && len(req.fetch_request.DataFrames) > 0 {
+						if err := stage.processQuery(req); err != nil {
 							log.Println(err)
 						}
 					}
-					ctx.response = nil
-					stage.output <- ctx
-					//ctx.done <- nil
+					stage.output <- req
 				case <-stage.ctx.Done():
 					// case that breaks the stage and releases resources
 					fmt.Println("Ending Timeseries Queue")
@@ -99,7 +97,7 @@ func (stage *InfluxDBTimeseriesQueryStage) SetUpstream(upstream Stage) {
 	fmt.Println("Updated stage to ", upstream)
 }
 
-func (stage *InfluxDBTimeseriesQueryStage) GetQueue() chan Context {
+func (stage *InfluxDBTimeseriesQueryStage) GetQueue() chan *Request {
 	return stage.output
 }
 
@@ -107,18 +105,18 @@ func (stage *InfluxDBTimeseriesQueryStage) String() string {
 	return "<|influx ts stage|>"
 }
 
-func (stage *InfluxDBTimeseriesQueryStage) processQuery(ctx Context) error {
+func (stage *InfluxDBTimeseriesQueryStage) processQuery(req *Request) error {
 	// parse timestamps for the query
-	start_time, err := time.Parse(time.RFC3339, ctx.request.Time.Start)
+	start_time, err := time.Parse(time.RFC3339, req.fetch_request.Time.Start)
 	if err != nil {
-		err = errors.Wrapf(err, "Could not parse Start time (%s)", ctx.request.Time.Start)
-		ctx.addError(err)
+		err = errors.Wrapf(err, "Could not parse Start time (%s)", req.fetch_request.Time.Start)
+		req.addError(err)
 		return err
 	}
-	end_time, err := time.Parse(time.RFC3339, ctx.request.Time.End)
+	end_time, err := time.Parse(time.RFC3339, req.fetch_request.Time.End)
 	if err != nil {
-		err = errors.Wrapf(err, "Could not parse End time (%s)", ctx.request.Time.End)
-		ctx.addError(err)
+		err = errors.Wrapf(err, "Could not parse End time (%s)", req.fetch_request.Time.End)
+		req.addError(err)
 		return err
 	}
 
@@ -126,7 +124,7 @@ func (stage *InfluxDBTimeseriesQueryStage) processQuery(ctx Context) error {
 	// we put each collection from a plugin in its own "measurement". But, we want to query
 	// by UUID, and we don't know the measurement. Either need to build some index of UUID
 	// to measurement, or just insert into a single measurement that we know from the beginning
-	for _, dataFrame := range ctx.request.DataFrames {
+	for _, dataFrame := range req.fetch_request.DataFrames {
 		for _, uuStr := range dataFrame.Uuids {
 
 			// default for RAW
@@ -135,7 +133,7 @@ func (stage *InfluxDBTimeseriesQueryStage) processQuery(ctx Context) error {
 			if dataFrame.Aggregation != mortarpb.AggFunc_AGG_FUNC_RAW {
 				window, err := ParseDuration(dataFrame.Window)
 				if err != nil {
-					ctx.addError(err)
+					req.addError(err)
 					return err
 				}
 				groupby = fmt.Sprintf("GROUP BY time(%s)", window)
@@ -208,8 +206,8 @@ func (stage *InfluxDBTimeseriesQueryStage) processQuery(ctx Context) error {
 					if pcount == TS_BATCH_SIZE {
 						tsresp.DataFrame = dataFrame.Name
 						tsresp.Identifier = uuStr
-						ctx.response = tsresp
-						stage.output <- ctx
+						req.fetch_responses <- tsresp
+						//stage.output <- ctx
 						tsresp = &mortarpb.FetchResponse{}
 						pcount = 0
 					}
@@ -219,8 +217,8 @@ func (stage *InfluxDBTimeseriesQueryStage) processQuery(ctx Context) error {
 			if len(tsresp.Times) > 0 {
 				tsresp.DataFrame = dataFrame.Name
 				tsresp.Identifier = uuStr
-				ctx.response = tsresp
-				stage.output <- ctx
+				req.fetch_responses <- tsresp
+				//stage.output <- ctx
 			}
 
 		}

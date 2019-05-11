@@ -25,7 +25,7 @@ var (
 
 type ApiFrontendBasicStage struct {
 	ctx    context.Context
-	output chan Context
+	output chan *Request
 	auth   *CognitoAuth
 	sem    chan struct{}
 	sync.Mutex
@@ -42,7 +42,7 @@ type ApiFrontendBasicStageConfig struct {
 
 func NewApiFrontendBasicStage(cfg *ApiFrontendBasicStageConfig) (*ApiFrontendBasicStage, error) {
 	stage := &ApiFrontendBasicStage{
-		output: make(chan Context),
+		output: make(chan *Request),
 		ctx:    cfg.StageContext,
 		sem:    make(chan struct{}, 20),
 	}
@@ -106,7 +106,7 @@ func (stage *ApiFrontendBasicStage) SetUpstream(upstream Stage) {
 	//has no upstream
 }
 
-func (stage *ApiFrontendBasicStage) GetQueue() chan Context {
+func (stage *ApiFrontendBasicStage) GetQueue() chan *Request {
 	return stage.output
 }
 func (stage *ApiFrontendBasicStage) String() string {
@@ -146,29 +146,22 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 
 	qualifyQueriesProcessed.Inc()
 
-	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
-	defer cancel()
+	req := NewQualifyRequest(ctx, request)
 
-	// prepare context for the execution
-	responseChan := make(chan *mortarpb.QualifyResponse)
-	queryCtx := Context{
-		ctx:             ctx,
-		qualify_request: *request,
-		qualify_done:    responseChan,
-	}
-
+	// send the request to the output of this stage so it
+	// can be handled by the next stage
 	select {
-	case stage.output <- queryCtx:
+	case stage.output <- req:
 	case <-ctx.Done():
 		return nil, errors.Wrap(ctx.Err(), "qualify timeout on dispatching query")
 	}
 
 	select {
-	case resp := <-responseChan:
-		//close(responseChan)
+	case resp := <-req.qualify_responses:
 		if resp.Error != "" {
 			log.Warning(resp.Error)
 		}
+		close(req.qualify_responses)
 		return resp, nil
 	case <-ctx.Done():
 		return nil, errors.Wrap(ctx.Err(), "qualify timeout on getting query response")
@@ -191,10 +184,9 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	activeQueries.Inc()
 	defer activeQueries.Dec()
 
-	ctx, cancel := context.WithTimeout(client.Context(), requestTimeout)
-	defer cancel()
+	ctx := client.Context()
 
-	headers, ok := metadata.FromIncomingContext(client.Context())
+	headers, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return unauthorizedErr
 	}
@@ -223,12 +215,8 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 		return errors.Wrap(ctx.Err(), "fetch timeout on getting semaphore")
 	}
 
-	responseChan := make(chan *mortarpb.FetchResponse)
-	queryCtx := Context{
-		ctx:     ctx,
-		request: *request,
-		done:    responseChan,
-	}
+	req := NewFetchRequest(ctx, request)
+
 	ret := make(chan error)
 	go func() {
 		var err error
@@ -236,16 +224,14 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 	sendloop:
 		for {
 			select {
-			case resp := <-responseChan:
+			case resp := <-req.fetch_responses:
 				if resp == nil {
 					// if this is nil then we are done, but there's no error (yet)
 					break sendloop
 				} else if err = client.Send(resp); err != nil {
 					// we have an error on sending, so we tear it all down
 					log.Error(errors.Wrap(err, "Error on sending"))
-					// have to remember to call cancel() here
 					finishResponse(resp)
-					cancel()
 					break sendloop
 				} else {
 					// happy path
@@ -254,22 +240,25 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 				}
 			case <-ctx.Done():
 				// this branch gets triggered because context gets cancelled
-				err = errors.Wrapf(ctx.Err(), "fetch timeout on response %v", queryCtx.errors)
+				err = errors.Wrapf(ctx.Err(), "fetch timeout on response %v", req.err)
 				break sendloop
 			}
 		}
 		ret <- err
+		close(req.fetch_responses)
 	}()
 
 	select {
-	case stage.output <- queryCtx:
+	case stage.output <- req:
 	case <-ctx.Done():
 		return errors.New("timeout")
 	}
 
 	select {
 	case e := <-ret:
-		log.Error("Got Error in ret ", e)
+		if e != nil {
+			log.Error("Got Error in ret ", e)
+		}
 		return e
 	case <-ctx.Done():
 		log.Error("timing out on waiting for result in fetch")

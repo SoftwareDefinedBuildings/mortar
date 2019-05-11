@@ -25,7 +25,7 @@ func init() {
 type BrickQueryStage struct {
 	upstream Stage
 	ctx      context.Context
-	output   chan Context
+	output   chan *Request
 
 	db            *hod.HodDB
 	highwatermark int64
@@ -45,7 +45,7 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 	}
 	stage := &BrickQueryStage{
 		upstream: cfg.Upstream,
-		output:   make(chan Context),
+		output:   make(chan *Request),
 		ctx:      cfg.StageContext,
 	}
 
@@ -78,39 +78,28 @@ func NewBrickQueryStage(cfg *BrickQueryStageConfig) (*BrickQueryStage, error) {
 			input := stage.upstream.GetQueue()
 			for {
 				select {
-				case ctx := <-input:
-					// new API
-					if len(ctx.request.Sites) > 0 && len(ctx.request.Views) > 0 {
-						if err := stage.processQuery2(ctx); err != nil {
-							log.Println(err)
-							ctx.response = nil
-							ctx.addError(err)
-							stage.output <- ctx
-						}
-						// old API
-					} else if len(ctx.request.Sites) > 0 && len(ctx.request.Streams) > 0 {
-						ctx.addError(errors.New("Need to upgrade to pymortar>=0.3.2"))
-						log.Error("Old client")
-						ctx.response = nil
-						stage.output <- ctx
-						//if err := stage.processQuery(ctx); err != nil {
-						//	log.Println(err)
-						//	ctx.response = nil
-						//	ctx.addError(err)
-						//	stage.output <- ctx
-						//}
-					} else if len(ctx.qualify_request.Required) > 0 {
-						if err := stage.processQualify(ctx); err != nil {
-							log.Warning(ctx.errors)
-							ctx.qualify_done <- &mortarpb.QualifyResponse{
-								Error: err.Error(),
+				case req := <-input:
+					if req.fetch_request != nil {
+						// handle metadata stage of fetch request
+						if len(req.fetch_request.Sites) > 0 && len(req.fetch_request.Views) > 0 {
+							if err := stage.processQuery(req); err != nil {
+								log.Println(err)
+								req.addError(err)
 							}
-							ctx.response = nil
-							stage.output <- ctx
 						}
-					} else {
-						stage.output <- ctx // if no sites/views, pass it along anyway?
+						stage.output <- req
+					} else if req.qualify_request != nil {
+						// handle qualify request
+						if len(req.qualify_request.Required) > 0 {
+							if err := stage.processQualify(req); err != nil {
+								req.addError(err)
+								req.qualify_responses <- &mortarpb.QualifyResponse{
+									Error: err.Error(),
+								}
+							}
+						}
 					}
+
 				case <-stage.ctx.Done():
 					// case that breaks the stage and releases resources
 					fmt.Println("Ending Brick Queue")
@@ -141,14 +130,14 @@ func (stage *BrickQueryStage) SetUpstream(upstream Stage) {
 }
 
 // blocks on internal channel until next "Context" is ready
-func (stage *BrickQueryStage) GetQueue() chan Context {
+func (stage *BrickQueryStage) GetQueue() chan *Request {
 	return stage.output
 }
 func (stage *BrickQueryStage) String() string {
 	return "<| brick stage |>"
 }
 
-func (stage *BrickQueryStage) processQualify(ctx Context) error {
+func (stage *BrickQueryStage) processQualify(req *Request) error {
 	brickresp := &mortarpb.QualifyResponse{}
 
 	sites := make(map[string]struct{})
@@ -158,16 +147,16 @@ func (stage *BrickQueryStage) processQualify(ctx Context) error {
 		Filter:    logpb.TimeFilter_At,
 		Timestamp: time.Now().UnixNano(),
 	}
-	version_response, err := stage.db.Versions(ctx.ctx, version_query)
+	version_response, err := stage.db.Versions(req.ctx, version_query)
 	if err != nil {
-		ctx.addError(err)
+		req.addError(err)
 		log.Error(err)
 		return err
 	}
 	if version_response.Error != "" {
 		err = errors.New(version_response.Error)
 		log.Error(err)
-		ctx.addError(err)
+		req.addError(err)
 		return err
 	}
 
@@ -175,20 +164,20 @@ func (stage *BrickQueryStage) processQualify(ctx Context) error {
 		sites[row.Values[0].Value] = struct{}{}
 	}
 
-	for _, querystring := range ctx.qualify_request.Required {
+	for _, querystring := range req.qualify_request.Required {
 		query, err := stage.db.ParseQuery(querystring, 0)
 		if err != nil {
-			ctx.addError(err)
+			req.addError(err)
 			log.Error(err)
 			return err
 		}
 
 		for site := range sites {
 			query.Graphs = []string{site}
-			res, err := stage.db.Select(ctx.ctx, query)
+			res, err := stage.db.Select(req.ctx, query)
 			if err != nil {
 				log.Error(err)
-				ctx.addError(err)
+				req.addError(err)
 				//return err
 			} else if len(res.Rows) == 0 {
 				delete(sites, site)
@@ -198,19 +187,19 @@ func (stage *BrickQueryStage) processQualify(ctx Context) error {
 	for site := range sites {
 		brickresp.Sites = append(brickresp.Sites, site)
 	}
-	ctx.qualify_done <- brickresp
+	req.qualify_responses <- brickresp
 
 	return nil
 }
 
 // We need to rethink how the Brick stage handles the view + dataFrame processing
 
-func (stage *BrickQueryStage) processQuery2(ctx Context) error {
+func (stage *BrickQueryStage) processQuery(req *Request) error {
 	// store view name -> list of dataVars
 	var viewDataVars = make(map[string][]string)
 	// store view name -> list of indexes to dependent dataFrames
 	var viewDataFrames = make(map[string][]int)
-	for idx, dataFrame := range ctx.request.DataFrames {
+	for idx, dataFrame := range req.fetch_request.DataFrames {
 		idx := idx
 	tsLoop:
 		for _, timeseries := range dataFrame.Timeseries {
@@ -230,10 +219,10 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 	log.Info("DataVars: ", viewDataVars)
 	log.Info("DataFrames: ", viewDataFrames)
 
-	for _, view := range ctx.request.Views {
+	for _, view := range req.fetch_request.Views {
 		query, err := stage.db.ParseQuery(view.Definition, stage.highwatermark)
 		if err != nil {
-			ctx.addError(err)
+			req.addError(err)
 			return err
 		}
 
@@ -242,13 +231,12 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 		// property is how to relate the points to the timeseries database. However, it also introduces the complexity
 		// of dealing with whether or not the variables *do* have associated timeseries or not.
 		mapping, _ := rewriteQuery(viewDataVars[view.Name], query)
-		for _, sitename := range ctx.request.Sites {
+		for _, sitename := range req.fetch_request.Sites {
 			query.Graphs = []string{sitename}
-			log.Warning("rewrote: ", query)
-			res, err := stage.db.Select(ctx.ctx, query)
+			res, err := stage.db.Select(req.ctx, query)
 			if err != nil {
 				log.Error(err)
-				ctx.addError(err)
+				req.addError(err)
 				continue
 				//return err
 			}
@@ -268,13 +256,11 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 			brickresp.View = view.Name
 			brickresp.Variables = res.Variables
 
-			log.Info("Got rows: ", len(res.Rows))
-
 			for _, row := range res.Rows {
 				//	// for each dependent dataFrame
 				for _, selIdx := range viewDataFrames[view.Name] {
 					// for each timeseries
-					dataFrame := ctx.request.DataFrames[selIdx]
+					dataFrame := req.fetch_request.DataFrames[selIdx]
 					// add uuids to the list on the DataFrame for each datavar from the view we're currently working with
 					for _, ts := range dataFrame.Timeseries {
 						if ts.View == view.Name {
@@ -285,7 +271,7 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 						}
 					}
 					// TODO: do we need to update the dataFrame?
-					ctx.request.DataFrames[selIdx] = dataFrame
+					req.fetch_request.DataFrames[selIdx] = dataFrame
 				}
 				//}
 				// we also add the query results to the output
@@ -293,64 +279,10 @@ func (stage *BrickQueryStage) processQuery2(ctx Context) error {
 			}
 
 			// send the query results to the client
-			ctx.done <- brickresp
+			req.fetch_responses <- brickresp
 		}
 
 	}
-	// signal that we are done processing this stage (1x)
-	stage.output <- ctx
-	return nil
-}
-
-func (stage *BrickQueryStage) processQuery(ctx Context) error {
-	for idx, reqstream := range ctx.request.Streams {
-		query, err := stage.db.ParseQuery(reqstream.Definition, stage.highwatermark)
-		if err != nil {
-			ctx.addError(err)
-			return err
-		}
-
-		// this rewrites the incoming query so that it extracts the UUIDs (bf:uuid property) for each of the
-		// variables in the SELECT clause of the query. This removes the need for the user to know that the bf:uuid
-		// property is how to relate the points to the timeseries database. However, it also introduces the complexity
-		// of dealing with whether or not the variables *do* have associated timeseries or not.
-		_, startIdx := rewriteQuery(reqstream.DataVars, query)
-		for _, sitename := range ctx.request.Sites {
-			query.Graphs = []string{sitename}
-			res, err := stage.db.Select(ctx.ctx, query)
-			if err != nil {
-				ctx.addError(err)
-				//return err
-			}
-
-			// TODO: if we have no results from anywhere, need to notify the user and terminate early
-
-			// collate the UUIDs from query results and push into context.
-			// Because the rewritten query puts all of the new variables corresponding to the possible UUIDs at the end,
-			// the rewriteQuery method has to return the index that we start with when iterating through the variables in
-			// each row to make sure we get the actual queries.
-			stream := ctx.request.Streams[idx]
-
-			brickresp := &mortarpb.FetchResponse{}
-
-			brickresp.Variable = reqstream.Name
-			brickresp.Variables = res.Variables
-			brickresp.Site = sitename
-			for _, row := range res.Rows {
-				for uuidx := startIdx; uuidx < len(query.Vars); uuidx++ {
-					stream.Uuids = append(stream.Uuids, row.Values[uuidx].Value)
-				}
-				// we also add the query results to the output
-				brickresp.Rows = append(brickresp.Rows, transformRow(row))
-			}
-			// send the query results to the client
-			// TODO: make this streaming?
-			ctx.done <- brickresp
-		}
-
-	}
-	// signal that we are done processing this stage (1x)
-	stage.output <- ctx
 	return nil
 }
 

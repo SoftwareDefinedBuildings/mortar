@@ -17,7 +17,7 @@ import (
 
 type ApiFrontendWAVEAuthStage struct {
 	ctx    context.Context
-	output chan Context
+	output chan *Request
 	sem    chan struct{}
 	sync.Mutex
 }
@@ -35,7 +35,7 @@ type ApiFrontendWAVEAuthStageConfig struct {
 func NewApiFrontendWAVEAuthStage(cfg *ApiFrontendWAVEAuthStageConfig) (*ApiFrontendWAVEAuthStage, error) {
 
 	stage := &ApiFrontendWAVEAuthStage{
-		output: make(chan Context),
+		output: make(chan *Request),
 		ctx:    cfg.StageContext,
 		sem:    make(chan struct{}, 20),
 	}
@@ -96,7 +96,7 @@ func (stage *ApiFrontendWAVEAuthStage) SetUpstream(upstream Stage) {
 	//has no upstream
 }
 
-func (stage *ApiFrontendWAVEAuthStage) GetQueue() chan Context {
+func (stage *ApiFrontendWAVEAuthStage) GetQueue() chan *Request {
 	return stage.output
 }
 func (stage *ApiFrontendWAVEAuthStage) String() string {
@@ -126,22 +126,16 @@ func (stage *ApiFrontendWAVEAuthStage) Qualify(ctx context.Context, request *mor
 	defer cancel()
 
 	// prepare context for the execution
-	responseChan := make(chan *mortarpb.QualifyResponse)
-	queryCtx := Context{
-		ctx:             ctx,
-		qualify_request: *request,
-		qualify_done:    responseChan,
-	}
+	req := NewQualifyRequest(ctx, request)
 
 	select {
-	case stage.output <- queryCtx:
+	case stage.output <- req:
 	case <-ctx.Done():
 		return nil, errors.Wrap(ctx.Err(), "qualify timeout on dispatching query")
 	}
 
 	select {
-	case resp := <-responseChan:
-		//close(responseChan)
+	case resp := <-req.qualify_responses:
 		if resp.Error != "" {
 			log.Warning(resp.Error)
 		}
@@ -183,12 +177,7 @@ func (stage *ApiFrontendWAVEAuthStage) Fetch(request *mortarpb.FetchRequest, cli
 		return errors.Wrap(ctx.Err(), "fetch timeout on getting semaphore")
 	}
 
-	responseChan := make(chan *mortarpb.FetchResponse)
-	queryCtx := Context{
-		ctx:     ctx,
-		request: *request,
-		done:    responseChan,
-	}
+	req := NewFetchRequest(ctx, request)
 	ret := make(chan error)
 	go func() {
 		var err error
@@ -196,7 +185,7 @@ func (stage *ApiFrontendWAVEAuthStage) Fetch(request *mortarpb.FetchRequest, cli
 	sendloop:
 		for {
 			select {
-			case resp := <-responseChan:
+			case resp := <-req.fetch_responses:
 				if resp == nil {
 					// if this is nil then we are done, but there's no error (yet)
 					break sendloop
@@ -205,7 +194,6 @@ func (stage *ApiFrontendWAVEAuthStage) Fetch(request *mortarpb.FetchRequest, cli
 					log.Error(errors.Wrap(err, "Error on sending"))
 					// have to remember to call cancel() here
 					finishResponse(resp)
-					cancel()
 					break sendloop
 				} else {
 					// happy path
@@ -214,7 +202,7 @@ func (stage *ApiFrontendWAVEAuthStage) Fetch(request *mortarpb.FetchRequest, cli
 				}
 			case <-ctx.Done():
 				// this branch gets triggered because context gets cancelled
-				err = errors.Wrapf(ctx.Err(), "fetch timeout on response %v", queryCtx.errors)
+				err = errors.Wrapf(ctx.Err(), "fetch timeout on response %v", req.err)
 				break sendloop
 			}
 		}
@@ -222,7 +210,7 @@ func (stage *ApiFrontendWAVEAuthStage) Fetch(request *mortarpb.FetchRequest, cli
 	}()
 
 	select {
-	case stage.output <- queryCtx:
+	case stage.output <- req:
 	case <-ctx.Done():
 		return errors.New("timeout")
 	}
