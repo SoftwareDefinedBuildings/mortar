@@ -68,7 +68,7 @@ func NewInfluxDBTimeseriesQueryStage(cfg *InfluxDBTimeseriesStageConfig) (*Influ
 							log.Println(err)
 						}
 					}
-					stage.output <- req
+					//stage.output <- req
 				case <-stage.ctx.Done():
 					// case that breaks the stage and releases resources
 					fmt.Println("Ending Timeseries Queue")
@@ -231,6 +231,7 @@ func (stage *InfluxDBTimeseriesQueryStage) processQuery(req *Request) error {
 
 		}
 	}
+	req.fetch_responses <- nil
 
 	return nil
 }
