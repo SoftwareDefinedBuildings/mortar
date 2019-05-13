@@ -206,7 +206,11 @@ func (stage *InfluxDBTimeseriesQueryStage) processQuery(req *Request) error {
 					if pcount == TS_BATCH_SIZE {
 						tsresp.DataFrame = dataFrame.Name
 						tsresp.Identifier = uuStr
-						req.fetch_responses <- tsresp
+						select {
+						case req.fetch_responses <- tsresp:
+						case <-req.Done():
+							continue
+						}
 						//stage.output <- ctx
 						tsresp = &mortarpb.FetchResponse{}
 						pcount = 0
@@ -217,7 +221,11 @@ func (stage *InfluxDBTimeseriesQueryStage) processQuery(req *Request) error {
 			if len(tsresp.Times) > 0 {
 				tsresp.DataFrame = dataFrame.Name
 				tsresp.Identifier = uuStr
-				req.fetch_responses <- tsresp
+				select {
+				case req.fetch_responses <- tsresp:
+				case <-req.Done():
+					continue
+				}
 				//stage.output <- ctx
 			}
 
