@@ -59,9 +59,13 @@ func NewTimeseriesQueryStage(cfg *TimeseriesStageConfig) (*TimeseriesQueryStage,
 				case req := <-input:
 					if len(req.fetch_request.Sites) > 0 && len(req.fetch_request.DataFrames) > 0 {
 						if err := stage.processQuery(req); err != nil {
+							req.addError(err)
 							log.Println(err)
 						}
+					} else {
+						req.finish()
 					}
+
 					//stage.output <- req
 				case <-stage.ctx.Done():
 					// case that breaks the stage and releases resources

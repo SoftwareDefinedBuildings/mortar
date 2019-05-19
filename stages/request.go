@@ -46,8 +46,26 @@ func NewFetchRequest(ctx context.Context, fetch *mortarpb.FetchRequest) *Request
 }
 
 func (request *Request) addError(err error) {
-	if request.err == nil {
-		request.err = err
+	if request.err != nil {
+		return
+	}
+	request.err = err
+	if request.fetch_responses != nil {
+		request.fetch_responses <- &mortarpb.FetchResponse{
+			Error: err.Error(),
+		}
+	} else if request.qualify_responses != nil {
+		request.qualify_responses <- &mortarpb.QualifyResponse{
+			Error: err.Error(),
+		}
+	}
+}
+
+func (request *Request) finish() {
+	if request.fetch_responses != nil {
+		request.fetch_responses <- nil
+	} else if request.qualify_responses != nil {
+		request.qualify_responses <- nil
 	}
 }
 

@@ -228,7 +228,8 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 				if resp == nil {
 					// if this is nil then we are done, but there's no error (yet)
 					break sendloop
-				} else if err = client.Send(resp); err != nil {
+				}
+				if err = client.Send(resp); err != nil {
 					// we have an error on sending, so we tear it all down
 					log.Error(errors.Wrap(err, "Error on sending"))
 					finishResponse(resp)
