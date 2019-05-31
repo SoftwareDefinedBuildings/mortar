@@ -1,5 +1,5 @@
 APP?=mortar
-RELEASE?=1.1.0-alpha2
+RELEASE?=1.1.0-alpha3
 MORTAR_REPOSITORY?=https://github.com/SoftwareDefinedBuildings/mortar-analytics
 .PHONY: proto frontend
 

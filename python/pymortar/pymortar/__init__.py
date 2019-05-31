@@ -20,6 +20,8 @@ import grpc
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
+class PyMortarException(Exception): pass
+
 class Client:
     """Method to create a new Pymortar client
 
@@ -127,10 +129,11 @@ class Client:
             for x in resp:
                 if x.error != "":
                     logging.error(x.error)
+                    raise PyMortarException(x.error)
                     break
                 res._add(x)
         except Exception as e:
-            if e.details() == 'parse jwt token err: Token is expired':
+            if hasattr(e,'details') and e.details() == 'parse jwt token err: Token is expired':
                 self._refresh()
                 return self.fetch(request)
             else:
