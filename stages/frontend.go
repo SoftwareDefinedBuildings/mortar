@@ -116,6 +116,12 @@ func (stage *ApiFrontendBasicStage) String() string {
 // identify which sites meet the requirements of the queries
 func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortarpb.QualifyRequest) (*mortarpb.QualifyResponse, error) {
 
+	defer func() {
+		if r := recover(); r != nil {
+			log.Warning("Recovered in qualify", r)
+		}
+	}()
+
 	t := time.Now()
 	defer func() {
 		log.Info("Qualify took ", time.Since(t))
@@ -160,6 +166,9 @@ func (stage *ApiFrontendBasicStage) Qualify(ctx context.Context, request *mortar
 	case resp := <-req.qualify_responses:
 		if resp.Error != "" {
 			log.Warning(resp.Error)
+		}
+		if req.err != nil && resp.Error == "" {
+			resp.Error = req.err.Error()
 		}
 		close(req.qualify_responses)
 		return resp, nil
