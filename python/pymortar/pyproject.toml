@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pymortar"
-version = "1.0.6-a1"
+version = "1.0.6"
 description = "Python tool for Mortar testbed"
 authors = ["Gabe Fierro <gtfierro@cs.berkeley.edu>"]
 
@@ -9,7 +9,7 @@ python = "^3.5"
 grpcio = "^1.18"
 googleapis-common-protos = "^1.5"
 grpcio-tools = "^1.18"
-pandas = "^0.23.4"
+pandas = "^0.24.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"
