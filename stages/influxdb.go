@@ -157,7 +157,7 @@ func (stage *InfluxDBTimeseriesQueryStage) processQuery(req *Request) error {
 			q_str := fmt.Sprintf(`SELECT time, %s
                              FROM "timeseries"
                              WHERE uuid='%s' 
-                               AND time > %d 
+                               AND time >= %d 
                                AND time < %d
                              %s
                              ;`, selector, uuStr, start_time.UnixNano(), end_time.UnixNano(), groupby)
