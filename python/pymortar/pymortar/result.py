@@ -1,6 +1,8 @@
 import sqlite3
 import time
 import pandas as pd
+import os
+from pathlib import Path
 
 
 def _format_uri(uri):
@@ -170,7 +172,7 @@ class Result:
         Returns:
             df (pandas.DataFrame): DataFrame containing timeseries data
         """
-        if key not in self._dataframes:
+        if name not in self._dataframes:
             return default
         return self[name]
 
@@ -221,3 +223,22 @@ class Result:
         """
         c = self.conn.cursor()
         return list(c.execute(q))
+
+    def dump(self, folder):
+        """
+        Dumps the result to folders in the indicated folder. Creates the folder if it does not exist.
+        DataFrames are dumped to df_{dataframe_name}.csv and Views are dumped to view_{view_name}.csv
+
+        Args:
+            folder (str): destination folder where the data will be dumped
+        """
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+        for dataframe_name in self.dataFrames:
+            csv_name = Path(folder) / f"df_{dataframe_name}.csv"
+            self.get(dataframe_name).to_csv(csv_name)
+
+        for view_name in self.views:
+            csv_name = Path(folder) / f"view_{view_name}.csv"
+            self.view(view_name).to_csv(csv_name, index=False)
