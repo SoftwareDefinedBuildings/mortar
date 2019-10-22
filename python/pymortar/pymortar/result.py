@@ -2,7 +2,10 @@ import sqlite3
 import time
 import pandas as pd
 import os
+import re
 from pathlib import Path
+from glob import glob
+import logging
 
 
 def _format_uri(uri):
@@ -242,3 +245,36 @@ class Result:
         for view_name in self.views:
             csv_name = Path(folder) / f"view_{view_name}.csv"
             self.view(view_name).to_csv(csv_name, index=False)
+
+    @staticmethod
+    def load(folder):
+        """
+        Create a result object from a folder of saved views and dataframes, such as that
+        which is returned by result.dump(folder). Call this statically from the Result object
+
+        Args:
+            folder (str): folder containing CSV files from a "dump"
+
+        Returns:
+            result (Result): a pymortar.Result object
+        """
+        view_files = glob(str(Path(folder) / f"view_*.csv"))
+        df_files = glob(str(Path(folder) / f"df_*.csv"))
+        logging.info(f"Loading views: {view_files}, dataframes {df_files}")
+
+        viewre = re.compile(r'view_(.*).csv')
+        dfre = re.compile(r'df_(.*).csv')
+
+        self = Result()
+        for f in view_files:
+            view_name = viewre.search(f).group(1)
+            df = pd.read_csv(f)
+            df.to_sql(view_name, self.conn)
+            self._tables[view_name] = list(df.columns)
+
+        for f in df_files:
+            df_name = dfre.search(f).group(1)
+            df = pd.read_csv(f)
+            self._dataframes[df_name] = df
+            self._dfs[df_name] = df
+        return self
