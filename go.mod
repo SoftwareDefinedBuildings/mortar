@@ -1,4 +1,4 @@
-module git.sr.ht/~gabe/mortar
+module github.com/SoftwareDefinedBuildings/mortar
 
 require (
 	cloud.google.com/go v0.40.0 // indirect

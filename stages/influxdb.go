@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	mortarpb "git.sr.ht/~gabe/mortar/proto"
+	mortarpb "github.com/SoftwareDefinedBuildings/mortar/proto"
 	//influx "github.com/influxdata/influxdb/client/v2"
 	influx "github.com/hamilton-lima/influxdb1-client/client"
 	//"github.com/pborman/uuid"

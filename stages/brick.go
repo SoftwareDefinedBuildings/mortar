@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"git.sr.ht/~gabe/hod/hod"
 	logpb "git.sr.ht/~gabe/hod/proto"
-	mortarpb "git.sr.ht/~gabe/mortar/proto"
+	mortarpb "github.com/SoftwareDefinedBuildings/mortar/proto"
 	"github.com/pkg/errors"
 	logrus "github.com/sirupsen/logrus"
 	"os"

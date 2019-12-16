@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	mortarpb "git.sr.ht/~gabe/mortar/proto"
+	mortarpb "github.com/SoftwareDefinedBuildings/mortar/proto"
 	"github.com/gtfierro/xboswave/grpcauth"
 	eapi "github.com/immesys/wave/eapi/pb"
 	"github.com/pkg/errors"

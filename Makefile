@@ -70,10 +70,10 @@ push-hoddb: hoddb-container
 	docker push mortar/hoddb:latest
 
 build:
-	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go build -o mortar
+	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hoddb/turtle go build -o mortar
 
 buildxbos: clean
-	CGO_CFLAGS_ALLOW=.*/git.sr.ht/%7Egabe/hod/turtle go build -o mortar cmd/xbosmain.go
+	CGO_CFLAGS_ALLOW=.*/github.com/gtfierro/hoddb/turtle go build -o mortar cmd/xbosmain.go
 
 clean:
 	rm -rf _hod_

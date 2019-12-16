@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	mortarpb "git.sr.ht/~gabe/mortar/proto"
+	mortarpb "github.com/SoftwareDefinedBuildings/mortar/proto"
 	"github.com/gtfierro/xboswave/grpcserver"
 	xbospb "github.com/gtfierro/xboswave/proto"
 	"github.com/immesys/wavemq/mqpb"

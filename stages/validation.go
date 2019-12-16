@@ -2,7 +2,7 @@ package stages
 
 import (
 	"fmt"
-	mortarpb "git.sr.ht/~gabe/mortar/proto"
+	mortarpb "github.com/SoftwareDefinedBuildings/mortar/proto"
 	"github.com/pkg/errors"
 	"time"
 )

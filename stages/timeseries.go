@@ -3,7 +3,7 @@ package stages
 import (
 	"context"
 	"fmt"
-	mortarpb "git.sr.ht/~gabe/mortar/proto"
+	mortarpb "github.com/SoftwareDefinedBuildings/mortar/proto"
 	"github.com/pborman/uuid"
 	"github.com/pkg/errors"
 	"gopkg.in/btrdb.v4"
