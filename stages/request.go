@@ -3,9 +3,12 @@ package stages
 import (
 	"context"
 	mortarpb "git.sr.ht/~gabe/mortar/proto"
+	"sync"
 )
 
 type Request struct {
+	sync.Mutex
+
 	ctx    context.Context
 	cancel func()
 	err    error
@@ -46,6 +49,8 @@ func NewFetchRequest(ctx context.Context, fetch *mortarpb.FetchRequest) *Request
 }
 
 func (request *Request) addError(err error) {
+	request.Lock()
+	defer request.Unlock()
 	if request.err != nil {
 		return
 	}
@@ -62,6 +67,8 @@ func (request *Request) addError(err error) {
 }
 
 func (request *Request) finish() {
+	request.Lock()
+	defer request.Unlock()
 	if request.fetch_responses != nil {
 		request.fetch_responses <- nil
 	} else if request.qualify_responses != nil {
@@ -70,6 +77,8 @@ func (request *Request) finish() {
 }
 
 func (request *Request) Done() <-chan struct{} {
+	request.Lock()
+	defer request.Unlock()
 	return request.ctx.Done()
 }
 

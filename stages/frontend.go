@@ -255,7 +255,9 @@ func (stage *ApiFrontendBasicStage) Fetch(request *mortarpb.FetchRequest, client
 			}
 		}
 		ret <- err
+		req.Lock()
 		close(req.fetch_responses)
+		req.Unlock()
 	}()
 
 	select {
