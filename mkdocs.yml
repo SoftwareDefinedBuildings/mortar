@@ -1,5 +1,5 @@
 site_name: Mortar Documentation
-repo_url: https://git.sr.ht/~gabe/mortar/
+repo_url: https://github.com/SoftwareDefinedBuildings/mortar/
 theme:
     name: 'material'
 markdown_extensions:
