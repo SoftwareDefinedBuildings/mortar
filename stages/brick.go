@@ -3,8 +3,8 @@ package stages
 import (
 	"context"
 	"fmt"
-	"git.sr.ht/~gabe/hod/hod"
-	logpb "git.sr.ht/~gabe/hod/proto"
+	"github.com/gtfierro/hoddb/hod"
+	logpb "github.com/gtfierro/hoddb/proto"
 	mortarpb "github.com/SoftwareDefinedBuildings/mortar/proto"
 	"github.com/pkg/errors"
 	logrus "github.com/sirupsen/logrus"
